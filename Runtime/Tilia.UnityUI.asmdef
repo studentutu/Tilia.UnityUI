@@ -1,0 +1,16 @@
+{
+    "name": "Tilia.UnityUI",
+    "references": [
+        "GUID:23756adb8cb36e64587322ad0ecdf5e3",
+        "GUID:1833de29b96431f4d99fef7a4887bf96"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

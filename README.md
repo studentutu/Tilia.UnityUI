@@ -11,7 +11,7 @@
 
 {Introduction into the purpose of the feature.}
 
-> **Requires** {platform and minimum version number}.
+> **Requires** Unity Editor 2018.3 +
 
 ## Getting Started
 

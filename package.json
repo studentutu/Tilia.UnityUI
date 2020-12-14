@@ -1,29 +1,40 @@
 {
-    "name": "io.extendreality.tilia.{scope}.{feature}.{platform?}",
-    "displayName": "Tilia {scope}.{feature}.{platform?}",
-    "description": "{Description of feature.}",
+    "name": "io.extendreality.tilia.unityui",
+    "displayName": "Tilia Unity.UI",
+    "description": "Support for Unity UI",
     "version": "1.0.0",
     "unity": "2018.3",
     "unityRelease": "10f1",
     "keywords": [
-        "pattern"
+        "Tilia",
+        "UI",
+        "Unity UI",
+        "Canvas",
+        "EventSystem",
+        "UI Pointer",
+        "WorldCanvas",
+        "VR Pointer",
+        "VRTK4",
+        "VRTK 3.3.0 UI Port"
     ],
-    "homepage": "https://github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}/",
+    "homepage": "https://github.com/studentutu/Tilia.UnityUI/",
     "bugs": {
-        "url": "https://github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}/issues"
+        "url": "https://github.com/studentutu/Tilia.UnityUI/issues"
     },
     "repository": {
         "type": "git",
-        "url": "ssh://git@github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}.git"
+        "url": "ssh://git@github.com/studentutu/Tilia.UnityUI.git"
     },
     "license": "MIT",
     "author": {
-        "name": "Extend Reality Ltd",
-        "email": "hello@extendreality.io",
-        "url": "https://github.com/ExtendRealityLtd"
+        "name": "Extend Reality Ltd feat Roman Fedorov",
+        "email": "studentutu@gmail.com",
+        "url": "https://github.com/studentutu"
     },
     "dependencies": {
-        "io.extendreality.zinnia.unity": "X.Y.Z"
+        "io.extendreality.zinnia.unity": "1.21.0",
+        "io.extendreality.tilia.interactions.interactables.unity": "1.13.3",
+        "io.extendreality.tilia.interactions.pointerinteractors.unity": "1.3.11"
     },
     "files": [
         "*.md",
@@ -31,6 +42,7 @@
         "*.asmdef",
         "*.xml",
         "Documentation",
-        "Runtime"
+        "Runtime",
+        "Editor"
     ]
 }
