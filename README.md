@@ -1,7 +1,7 @@
 [![Tilia logo][Tilia-Image]](#)
 
 > ### Tilia Unity UI Unity Editor 2017 +
-> {Description of feature}.
+> Unity UI with UI Pointers.
 
 [![Release][Version-Release]][Releases]
 [![License][License-Badge]][License]
