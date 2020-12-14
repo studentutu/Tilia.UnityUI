@@ -1,6 +1,6 @@
 [![Tilia logo][Tilia-Image]](#)
 
-> ### Tilia {scope} {feature} {platform?}
+> ### Tilia Unity UI Unity Editor 2017 +
 > {Description of feature}.
 
 [![Release][Version-Release]][Releases]
@@ -9,9 +9,9 @@
 
 ## Introduction
 
-{Introduction into the purpose of the feature.}
+Support for Unity UI 
 
-> **Requires** Unity Editor 2018.3 +
+> **Requires** Unity Editor 2017.4 +
 
 ## Getting Started
 
