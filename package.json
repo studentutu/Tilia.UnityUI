@@ -1,0 +1,36 @@
+{
+    "name": "io.extendreality.tilia.{scope}.{feature}.{platform?}",
+    "displayName": "Tilia {scope}.{feature}.{platform?}",
+    "description": "{Description of feature.}",
+    "version": "1.0.0",
+    "unity": "2018.3",
+    "unityRelease": "10f1",
+    "keywords": [
+        "pattern"
+    ],
+    "homepage": "https://github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}/",
+    "bugs": {
+        "url": "https://github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "ssh://git@github.com/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}.git"
+    },
+    "license": "MIT",
+    "author": {
+        "name": "Extend Reality Ltd",
+        "email": "hello@extendreality.io",
+        "url": "https://github.com/ExtendRealityLtd"
+    },
+    "dependencies": {
+        "io.extendreality.zinnia.unity": "X.Y.Z"
+    },
+    "files": [
+        "*.md",
+        "*.meta",
+        "*.asmdef",
+        "*.xml",
+        "Documentation",
+        "Runtime"
+    ]
+}
