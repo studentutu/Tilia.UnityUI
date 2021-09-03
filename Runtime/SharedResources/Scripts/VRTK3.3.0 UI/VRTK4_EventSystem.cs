@@ -28,7 +28,7 @@ namespace Tilia.VRTKUI
                 previousEventSystem.enabled = false;
                 CopyValuesFrom(previousEventSystem, this);
             }
-
+            vrInputModule = gameObject.GetComponent<VRTK4_VRInputModule>();
             if (vrInputModule == null)
             {
                 vrInputModule = gameObject.AddComponent<VRTK4_VRInputModule>();

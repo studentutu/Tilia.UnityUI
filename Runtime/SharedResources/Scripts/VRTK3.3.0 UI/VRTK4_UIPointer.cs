@@ -1,11 +1,12 @@
-﻿using Zinnia.Action;
+﻿using Ludiq;
+using Zinnia.Action;
 
 namespace Tilia.VRTKUI
 {
     using UnityEngine;
     using UnityEngine.EventSystems;
     using System.Collections.Generic;
-    
+
     /// <summary>
     /// [RequireComponent(typeof(Vrtk4UiToPointer))]
     /// Provides the ability to interact with UICanvas elements and the contained Unity UI elements within.
@@ -29,7 +30,7 @@ namespace Tilia.VRTKUI
     public class VRTK4_UIPointer : MonoBehaviour
     {
         private static List<VRTK4_UIPointer> VrtkUiPointers = new List<VRTK4_UIPointer>();
-        
+
         /// <summary>
         /// Event Payload
         /// </summary>
@@ -58,9 +59,9 @@ namespace Tilia.VRTKUI
         /// Event Payload
         /// </summary>
         /// <param name="sender">this object</param>
-        public delegate void UIControllerInteractionEvent (VRTK4_UIPointer sender);
+        public delegate void UIControllerInteractionEvent(VRTK4_UIPointer sender);
 
-        
+
         /// <summary>
         /// Methods of when to consider a UI Click action
         /// </summary>
@@ -70,74 +71,71 @@ namespace Tilia.VRTKUI
             /// Consider a UI Click action has happened when the UI Click alias button is released.
             /// </summary>
             ClickOnButtonUp,
+
             /// <summary>
             /// Consider a UI Click action has happened when the UI Click alias button is pressed.
             /// </summary>
             ClickOnButtonDown
         }
 
-        [Header("Activation Settings")] 
-        
-        [Tooltip("The independent scroll axis from the device.")]
+        [Header("Activation Settings")] [Tooltip("The independent scroll axis from the device.")]
         public Vector2Action axisAction = null;
 
         [Tooltip("The button used to activate/deactivate the UI raycast for the pointer.")]
         public BooleanAction activationButton = null;
-        
-        [Header("Selection Settings")]
 
+        [Header("Selection Settings")]
         [Tooltip("The button used to execute the select action at the pointer's target position.")]
         public BooleanAction selectionButton = null;
-        
+
         [Tooltip("Determines when the UI Click event action should happen.")]
         public ClickMethods clickMethod = ClickMethods.ClickOnButtonUp;
-        
-        [Tooltip("Determines whether the UI click action should be triggered when the pointer is deactivated. If the pointer is hovering over a clickable element then it will invoke the click action on that element. Note: Only works with `Click Method =  Click_On_Button_Up`")]
+
+        [Tooltip(
+            "Determines whether the UI click action should be triggered when the pointer is deactivated. If the pointer is hovering over a clickable element then it will invoke the click action on that element. Note: Only works with `Click Method =  Click_On_Button_Up`")]
         public bool attemptClickOnDeactivate = false;
-       
-        [Tooltip("The amount of time the pointer can be over the same UI element before it automatically attempts to click it. 0f means no click attempt will be made.")]
+
+        [Tooltip(
+            "The amount of time the pointer can be over the same UI element before it automatically attempts to click it. 0f means no click attempt will be made.")]
         public float clickAfterHoverDuration = 0f;
 
-        [Header("Customisation Settings")]
-
-        [Tooltip("The maximum length the UI Raycast will reach.")]
+        [Header("Customisation Settings")] [Tooltip("The maximum length the UI Raycast will reach.")]
         public float maximumLength = float.PositiveInfinity;
-        
-        [Tooltip("A custom transform to use as the origin of the pointer. If no pointer origin transform is provided then the transform the script is attached to is used.")]
+
+        [Tooltip(
+            "A custom transform to use as the origin of the pointer. If no pointer origin transform is provided then the transform the script is attached to is used.")]
         public Transform customOrigin = null;
-        
-        [HideInInspector]
-        public PointerEventData pointerEventData;
-        [HideInInspector]
-        public GameObject hoveringElement;
-        [HideInInspector]
-        public float hoverDurationTimer = 0f;
-        [HideInInspector]
-        public bool canClickOnHover = false;
+
+        [HideInInspector] public PointerEventData pointerEventData;
+        [HideInInspector] public GameObject hoveringElement;
+        [HideInInspector] public float hoverDurationTimer = 0f;
+        [HideInInspector] public bool canClickOnHover = false;
 
         /// <summary>
         /// The GameObject of the front trigger activator of the canvas currently being activated by this pointer.
         /// </summary>
-        [HideInInspector]
-        public GameObject autoActivatingCanvas = null;
+        [HideInInspector] public GameObject autoActivatingCanvas = null;
+
         /// <summary>
         /// Determines if the UI Pointer has collided with a valid canvas that has collision click turned on.
         /// </summary>
-        [HideInInspector]
-        public bool collisionClick = false;
+        [HideInInspector] public bool collisionClick = false;
 
         /// <summary>
         /// Emitted when the UI activation button is pressed.
         /// </summary>
         public event UIControllerInteractionEvent ActivationButtonPressed;
+
         /// <summary>
         /// Emitted when the UI activation button is released.
         /// </summary>
         public event UIControllerInteractionEvent ActivationButtonReleased;
+
         /// <summary>
         /// Emitted when the UI selection button is pressed.
         /// </summary>
         public event UIControllerInteractionEvent SelectionButtonPressed;
+
         /// <summary>
         /// Emitted when the UI selection button is released.
         /// </summary>
@@ -147,18 +145,22 @@ namespace Tilia.VRTKUI
         /// Emitted when the UI Pointer is colliding with a valid UI element.
         /// </summary>
         public event UIPointerEventHandler UIPointerElementEnter;
+
         /// <summary>
         /// Emitted when the UI Pointer is no longer colliding with any valid UI elements.
         /// </summary>
         public event UIPointerEventHandler UIPointerElementExit;
+
         /// <summary>
         /// Emitted when the UI Pointer has clicked the currently collided UI element.
         /// </summary>
         public event UIPointerEventHandler UIPointerElementClick;
+
         /// <summary>
         /// Emitted when the UI Pointer begins dragging a valid UI element.
         /// </summary>
         public event UIPointerEventHandler UIPointerElementDragStart;
+
         /// <summary>
         /// Emitted when the UI Pointer stops dragging a valid UI element.
         /// </summary>
@@ -210,12 +212,18 @@ namespace Tilia.VRTKUI
             {
                 ResetHoverTimer();
             }
+
             if (UIPointerElementExit != null)
             {
                 UIPointerElementExit(this, e);
 
                 if (attemptClickOnDeactivate && !e.isActive && e.previousTarget)
                 {
+                    if (pointerEventData == null)
+                    {
+                        pointerEventData = new PointerEventData(EventSystem.current);
+                    }
+
                     pointerEventData.pointerPress = e.previousTarget;
                 }
             }
@@ -290,11 +298,12 @@ namespace Tilia.VRTKUI
                 {
                     return pointer;
                 }
+
                 if (eventData.selectedObject == pointer.currentTarget)
                 {
                     return pointer;
                 }
-                
+
 
                 foreach (var hoveredWith in eventData.hovered)
                 {
@@ -321,7 +330,7 @@ namespace Tilia.VRTKUI
             return -1;
         }
 
-        public virtual VRTK4UIPointerEventArgs SetUIPointerEvent(RaycastResult currentRaycastResult, 
+        public virtual VRTK4UIPointerEventArgs SetUIPointerEvent(RaycastResult currentRaycastResult,
             GameObject currentTarget, GameObject lastTarget = null)
         {
             VRTK4UIPointerEventArgs e;
@@ -343,17 +352,46 @@ namespace Tilia.VRTKUI
             if (eventSystem == null)
             {
                 Debug.LogError(
-                    string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_SCENE {1}", nameof(VRTK4_UIPointer), "EventSystem"), 
+                    string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_SCENE {1}", nameof(VRTK4_UIPointer),
+                        "EventSystem"),
                     gameObject);
                 return null;
             }
 
-            if (!(eventSystem is VRTK4_EventSystem))
+            var eventSystemGameObject = eventSystem.gameObject;
+
+            if (eventSystem.GetType() != typeof(VRTK4_EventSystem))
             {
-                eventSystem = eventSystem.gameObject.AddComponent<VRTK4_EventSystem>();
+                // remove old system, put vrtk 4
+                var oldInputModule = eventSystemGameObject.GetComponent<StandaloneInputModule>();
+                bool needTOAddOldInputModule = oldInputModule != null;
+                if (oldInputModule != null)
+                {
+                    oldInputModule.enabled = false;
+                    GameObject.DestroyImmediate(oldInputModule);
+                }
+
+                eventSystem.enabled = false;
+                GameObject.DestroyImmediate(eventSystem);
+                var eventSystemTyped = eventSystemGameObject.GetComponent<VRTK4_EventSystem>();
+                if (eventSystemTyped == null)
+                {
+                    eventSystemGameObject.AddComponent<VRTK4_EventSystem>();
+                }
+
+                if (needTOAddOldInputModule)
+                {
+                    eventSystemGameObject.AddComponent<StandaloneInputModule>();
+                }
             }
 
-            return eventSystem.GetComponent<VRTK4_VRInputModule>();
+            VRTK4_VRInputModule needed = eventSystemGameObject.GetComponent<VRTK4_VRInputModule>();
+            if (needed == null)
+            {
+                needed = eventSystemGameObject.AddComponent<VRTK4_VRInputModule>();
+            }
+
+            return needed;
         }
 
         /// <summary>
@@ -366,7 +404,8 @@ namespace Tilia.VRTKUI
             if (vrtk4EventSystem == null)
             {
                 Debug.LogError(
-                    string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_SCENE {1}",nameof(VRTK4_UIPointer), "EventSystem"), 
+                    string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_SCENE {1}", nameof(VRTK4_UIPointer),
+                        "EventSystem"),
                     gameObject);
                 return;
             }
@@ -385,12 +424,13 @@ namespace Tilia.VRTKUI
             {
                 return true;
             }
-            
+
             pointerClicked = false;
             if (IsActivationButtonPressed() && !lastPointerPressState)
             {
                 pointerClicked = true;
             }
+
             lastPointerPressState = activationButton.Value;
 
             if (pointerClicked)
@@ -428,7 +468,9 @@ namespace Tilia.VRTKUI
         public virtual bool ValidClick(bool checkLastClick, bool lastClickState = false)
         {
             bool controllerClicked = (collisionClick ? collisionClick : IsSelectionButtonPressed());
-            bool result = (checkLastClick ? controllerClicked && lastPointerClickState == lastClickState : controllerClicked);
+            bool result = (checkLastClick
+                ? controllerClicked && lastPointerClickState == lastClickState
+                : controllerClicked);
             lastPointerClickState = controllerClicked;
             return result;
         }
@@ -454,7 +496,7 @@ namespace Tilia.VRTKUI
         protected virtual void OnEnable()
         {
             VrtkUiPointers.Add(this);
-            customOrigin = ( customOrigin == null ? transform : customOrigin);
+            customOrigin = (customOrigin == null ? transform : customOrigin);
             ConfigureEventSystem();
             pointerClicked = false;
             lastPointerPressState = false;
@@ -465,7 +507,7 @@ namespace Tilia.VRTKUI
             selectionButton.ValueChanged.AddListener(OnSelectionButton);
         }
 
-        private void OnActiveButton( bool newValue)
+        private void OnActiveButton(bool newValue)
         {
             if (newValue)
             {
@@ -476,8 +518,8 @@ namespace Tilia.VRTKUI
                 OnActivationButtonReleased();
             }
         }
-        
-        private void OnSelectionButton( bool newValue)
+
+        private void OnSelectionButton(bool newValue)
         {
             if (newValue)
             {
@@ -501,6 +543,11 @@ namespace Tilia.VRTKUI
 
         protected virtual void LateUpdate()
         {
+            if (pointerEventData == null)
+            {
+                pointerEventData = new PointerEventData(EventSystem.current);
+            }
+
             pointerEventData.pointerId = GetIndexOfUIPointer();
             VRTK4_SharedMethods.AddDictionaryValue(pointerLengths, pointerEventData.pointerId, maximumLength, true);
         }
