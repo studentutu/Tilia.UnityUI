@@ -10,12 +10,12 @@
     /// </summary>
     public class VRTK4_VRInputModule : PointerInputModule
     {
-        public List<VRTK4_UIPointer> pointers = new List<VRTK4_UIPointer>();
+        public List<VRTK4_UIPointer> Pointers = new List<VRTK4_UIPointer>();
         protected List<RaycastResult> raycasts = new List<RaycastResult>();
         
         public virtual void Initialise()
         {
-            pointers.Clear();
+            Pointers.Clear();
         }
 
         //Needed to allow other regular (non-VR) InputModules in combination with VRTK_EventSystem
@@ -26,9 +26,9 @@
 
         public override void Process()
         {
-            for (int i = 0; i < pointers.Count; i++)
+            for (int i = 0; i < Pointers.Count; i++)
             {
-                VRTK4_UIPointer pointer = pointers[i];
+                VRTK4_UIPointer pointer = Pointers[i];
                 if (pointer.gameObject.activeInHierarchy && pointer.enabled)
                 {
                     List<RaycastResult> results = new List<RaycastResult>();

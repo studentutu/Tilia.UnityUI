@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Diagnostics;
+using UnityEngine;
 
 namespace Tilia.VRTKUI
 {
@@ -6,19 +7,46 @@ namespace Tilia.VRTKUI
     using System.Linq;
     using System.Reflection;
     using UnityEngine.EventSystems;
-    
+
     /// <summary>
     /// Overriden standard event system so that it will work both with standard UI and specific UI Pointers 
     /// </summary>
     [DisallowMultipleComponent]
     public class VRTK4_EventSystem : EventSystem
     {
+        private static VRTK4_EventSystem _instance = null;
+
+        public static VRTK4_EventSystem Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<VRTK4_EventSystem>();
+                }
+
+                return _instance;
+            }
+        }
+
         protected EventSystem previousEventSystem;
         protected VRTK4_VRInputModule vrInputModule;
+        public VRTK4_VRInputModule VRInputModule => vrInputModule;
 
-        private static readonly FieldInfo[] EVENT_SYSTEM_FIELD_INFOS = typeof(EventSystem).GetFields(BindingFlags.Public | BindingFlags.Instance);
-        private static readonly PropertyInfo[] EVENT_SYSTEM_PROPERTY_INFOS = typeof(EventSystem).GetProperties(BindingFlags.Public | BindingFlags.Instance).Except(new[] { typeof(EventSystem).GetProperty("enabled") }).ToArray();
-        private static readonly FieldInfo BASE_INPUT_MODULE_EVENT_SYSTEM_FIELD_INFO = typeof(BaseInputModule).GetField("m_EventSystem", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly FieldInfo[] EVENT_SYSTEM_FIELD_INFOS =
+            typeof(EventSystem).GetFields(BindingFlags.Public | BindingFlags.Instance);
+
+        private static readonly PropertyInfo[] EVENT_SYSTEM_PROPERTY_INFOS = typeof(EventSystem)
+            .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Except(new[] {typeof(EventSystem).GetProperty("enabled")}).ToArray();
+
+        private static readonly FieldInfo BASE_INPUT_MODULE_EVENT_SYSTEM_FIELD_INFO =
+            typeof(BaseInputModule).GetField("m_EventSystem", BindingFlags.NonPublic | BindingFlags.Instance);
+
+        public void InitializeWithVRModule(VRTK4_VRInputModule module)
+        {
+            vrInputModule = module;
+        }
 
         protected override void OnEnable()
         {
@@ -28,11 +56,16 @@ namespace Tilia.VRTKUI
                 previousEventSystem.enabled = false;
                 CopyValuesFrom(previousEventSystem, this);
             }
-            vrInputModule = gameObject.GetComponent<VRTK4_VRInputModule>();
+
             if (vrInputModule == null)
             {
-                vrInputModule = gameObject.AddComponent<VRTK4_VRInputModule>();
+                vrInputModule = gameObject.GetComponent<VRTK4_VRInputModule>();
+                if (vrInputModule == null)
+                {
+                    vrInputModule = gameObject.AddComponent<VRTK4_VRInputModule>();
+                }
             }
+
             base.OnEnable();
             StartCoroutine(SetEventSystemOfBaseInputModulesAfterFrameDelay(this));
         }
@@ -88,7 +121,7 @@ namespace Tilia.VRTKUI
             yield return null;
             SetEventSystemOfBaseInputModules(eventSystem);
         }
-        
+
         private static void SetEventSystemOfBaseInputModules(EventSystem eventSystem)
         {
             /*

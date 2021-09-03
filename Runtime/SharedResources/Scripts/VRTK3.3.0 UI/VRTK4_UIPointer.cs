@@ -1,5 +1,4 @@
-﻿using Ludiq;
-using Zinnia.Action;
+﻿using Zinnia.Action;
 
 namespace Tilia.VRTKUI
 {
@@ -173,7 +172,7 @@ namespace Tilia.VRTKUI
         protected bool lastPointerClickState = false;
         protected GameObject currentTarget;
 
-        protected EventSystem cachedEventSystem;
+        // protected VRTK4_EventSystem cachedEventSystem;
         protected VRTK4_VRInputModule cachedVRInputModule;
 
         /// <summary>
@@ -347,8 +346,9 @@ namespace Tilia.VRTKUI
         /// </summary>
         /// <param name="eventSystem">The global Unity event system to be used by the UI pointers.</param>
         /// <returns>A custom input module that is used to detect input from VR pointers.</returns>
-        public virtual VRTK4_VRInputModule SetEventSystem(EventSystem eventSystem)
+        public virtual VRTK4_VRInputModule SetEventSystem()
         {
+            EventSystem eventSystem = EventSystem.current;
             if (eventSystem == null)
             {
                 Debug.LogError(
@@ -363,32 +363,38 @@ namespace Tilia.VRTKUI
             if (eventSystem.GetType() != typeof(VRTK4_EventSystem))
             {
                 // remove old system, put vrtk 4
-                var oldInputModule = eventSystemGameObject.GetComponent<StandaloneInputModule>();
-                bool needTOAddOldInputModule = oldInputModule != null;
-                if (oldInputModule != null)
+                var listofTypes = new List<System.Type>();
+                foreach (var baseInpudModules in eventSystemGameObject.GetComponents<BaseInputModule>())
                 {
-                    oldInputModule.enabled = false;
-                    GameObject.DestroyImmediate(oldInputModule);
+                    listofTypes.Add(baseInpudModules.GetType());
+                    baseInpudModules.enabled = false;
+                    GameObject.DestroyImmediate(baseInpudModules);
                 }
 
                 eventSystem.enabled = false;
                 GameObject.DestroyImmediate(eventSystem);
-                var eventSystemTyped = eventSystemGameObject.GetComponent<VRTK4_EventSystem>();
+                var eventSystemTyped = VRTK4_EventSystem.Instance;
                 if (eventSystemTyped == null)
                 {
                     eventSystemGameObject.AddComponent<VRTK4_EventSystem>();
                 }
 
-                if (needTOAddOldInputModule)
+                foreach (var itemType in listofTypes)
                 {
-                    eventSystemGameObject.AddComponent<StandaloneInputModule>();
+                    eventSystemGameObject.AddComponent(itemType);
                 }
             }
 
-            VRTK4_VRInputModule needed = eventSystemGameObject.GetComponent<VRTK4_VRInputModule>();
+            VRTK4_VRInputModule needed = VRTK4_EventSystem.Instance.VRInputModule;
             if (needed == null)
             {
-                needed = eventSystemGameObject.AddComponent<VRTK4_VRInputModule>();
+                needed = eventSystemGameObject.GetComponent<VRTK4_VRInputModule>();
+                if (needed == null)
+                {
+                    needed = eventSystemGameObject.AddComponent<VRTK4_VRInputModule>();
+                }
+
+                VRTK4_EventSystem.Instance.InitializeWithVRModule(needed);
             }
 
             return needed;
@@ -535,9 +541,9 @@ namespace Tilia.VRTKUI
         {
             VrtkUiPointers.Remove(this);
 
-            if (cachedVRInputModule && cachedVRInputModule.pointers.Contains(this))
+            if (cachedVRInputModule && cachedVRInputModule.Pointers.Contains(this))
             {
-                cachedVRInputModule.pointers.Remove(this);
+                cachedVRInputModule.Pointers.Remove(this);
             }
         }
 
@@ -560,26 +566,21 @@ namespace Tilia.VRTKUI
 
         protected virtual void ConfigureEventSystem()
         {
-            if (cachedEventSystem == null)
-            {
-                cachedEventSystem = FindObjectOfType<EventSystem>();
-            }
-
             if (cachedVRInputModule == null)
             {
-                cachedVRInputModule = SetEventSystem(cachedEventSystem);
+                cachedVRInputModule = SetEventSystem();
             }
 
-            if (cachedEventSystem != null && cachedVRInputModule != null)
+            if (VRTK4_EventSystem.Instance != null && cachedVRInputModule != null)
             {
                 if (pointerEventData == null)
                 {
-                    pointerEventData = new PointerEventData(cachedEventSystem);
+                    pointerEventData = new PointerEventData(VRTK4_EventSystem.Instance);
                 }
 
-                if (!cachedVRInputModule.pointers.Contains(this))
+                if (!cachedVRInputModule.Pointers.Contains(this))
                 {
-                    cachedVRInputModule.pointers.Add(this);
+                    cachedVRInputModule.Pointers.Add(this);
                 }
             }
         }
