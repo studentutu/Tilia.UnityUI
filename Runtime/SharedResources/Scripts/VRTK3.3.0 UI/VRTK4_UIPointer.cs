@@ -351,24 +351,28 @@ namespace Tilia.VRTKUI
             EventSystem eventSystem = EventSystem.current;
             if (eventSystem == null)
             {
+                eventSystem = VRTK4_EventSystem.Instance;
+            }
+
+            if (eventSystem == null)
+            {
                 Debug.LogError(
                     string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_SCENE {1}", nameof(VRTK4_UIPointer),
                         "EventSystem"),
                     gameObject);
                 return null;
             }
-
+            
             var eventSystemGameObject = eventSystem.gameObject;
-
             if (eventSystem.GetType() != typeof(VRTK4_EventSystem))
             {
                 // remove old system, put vrtk 4
-                var listofTypes = new List<System.Type>();
-                foreach (var baseInpudModules in eventSystemGameObject.GetComponents<BaseInputModule>())
+                var listOfTypes = new List<System.Type>();
+                foreach (var baseInputModule in eventSystemGameObject.GetComponents<BaseInputModule>())
                 {
-                    listofTypes.Add(baseInpudModules.GetType());
-                    baseInpudModules.enabled = false;
-                    GameObject.DestroyImmediate(baseInpudModules);
+                    listOfTypes.Add(baseInputModule.GetType());
+                    baseInputModule.enabled = false;
+                    GameObject.DestroyImmediate(baseInputModule);
                 }
 
                 eventSystem.enabled = false;
@@ -379,7 +383,7 @@ namespace Tilia.VRTKUI
                     eventSystemGameObject.AddComponent<VRTK4_EventSystem>();
                 }
 
-                foreach (var itemType in listofTypes)
+                foreach (var itemType in listOfTypes)
                 {
                     eventSystemGameObject.AddComponent(itemType);
                 }

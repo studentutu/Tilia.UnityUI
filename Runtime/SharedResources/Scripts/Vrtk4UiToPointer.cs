@@ -16,6 +16,7 @@
     public class Vrtk4UiToPointer : MonoBehaviour
     {
         [SerializeField] private PointerFacade pointerFacade;
+        [SerializeField] private bool applyButtonsFromFacade = false;
         [SerializeField] private VRTK4_UIPointer UI_Pointer;
         private List<Vector3> temporalList = new List<Vector3>(2);
         private ObjectPointer.EventData eventData;
@@ -26,6 +27,11 @@
             UI_Pointer.UIPointerElementEnter += HoverEnter;
             UI_Pointer.UIPointerElementExit += OnHoverExit;
             UI_Pointer.UIPointerElementClick += OnSelectEnter;
+            if (applyButtonsFromFacade)
+            {
+                UI_Pointer.activationButton = pointerFacade.ActivationAction;
+                UI_Pointer.selectionButton = pointerFacade.SelectionAction;
+            }
         }
 
         private void OnDisable()
