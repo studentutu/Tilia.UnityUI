@@ -131,7 +131,7 @@
                     pointer.pointerEventData.pointerEnter = null;
                 }
             }
-            else
+            // else
             {
                 for (int i = 0; i < results.Count; i++)
                 {

@@ -9,9 +9,18 @@
 
 ## Introduction
 
-Support for Unity UI 
+Support for Unity UI. Both New and Old input systems
 
 > **Requires** Unity Editor 2017.4 +
+
+
+## Important usage
+
+    - Place VRTK4_UICanvas on each canvas
+    - Mark your canvas graphic raycaster with Blocking Mask (never leave as none)!
+    - In addition to the VRTK4_UI_ToPointer add VRTK4_UIPointer add to the same gameobject
+    - To Ignore Player Objects - Use Component VRTK4_Player Object
+    - Also, if you are using Pseudobody - add pointers to the IgnoredGameObjectList
 
 ## Getting Started
 

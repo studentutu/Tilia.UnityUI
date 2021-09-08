@@ -1,10 +1,13 @@
-﻿namespace Tilia.VRTKUI
+﻿using UnityEngine.Assertions;
+
+namespace Tilia.VRTKUI
 {
     using System;
     using System.Collections.Generic;
     using UnityEngine;
     using UnityEngine.EventSystems;
     using UnityEngine.UI;
+
     /// <summary>
     /// This script allows VRTK to interact cleanly with Unity Canvases.
     /// It is mostly a duplicate of Unity's default GraphicsRaycaster:
@@ -22,9 +25,8 @@
         protected const float UI_CONTROL_OFFSET = 0.00001f;
 
         // Use a static to prevent list reallocation. We only need one of these globally (single main thread), and only to hold temporary data
-        [NonSerialized]
-        private static List<RaycastResult> s_RaycastResults = new List<RaycastResult>();
-        
+        [NonSerialized] private static List<RaycastResult> s_RaycastResults = new List<RaycastResult>();
+
         protected virtual Canvas canvas
         {
             get
@@ -38,7 +40,7 @@
                 return currentCanvas;
             }
         }
-        
+
         /// <summary>
         /// Enables to raycast event from any point towards any VRTK4_Canvas (even when outside the view)
         /// </summary>
@@ -58,7 +60,8 @@
             }
             else
             {
-                ray = new Ray(eventData.pointerCurrentRaycast.worldPosition, eventData.pointerCurrentRaycast.worldNormal);
+                ray = new Ray(eventData.pointerCurrentRaycast.worldPosition,
+                    eventData.pointerCurrentRaycast.worldNormal);
             }
 
             Raycast(canvas, eventCamera, eventData, ray, ref s_RaycastResults);
@@ -67,7 +70,8 @@
         }
 
         //[Pure]
-        protected virtual void SetNearestRaycast(ref PointerEventData eventData, ref List<RaycastResult> resultAppendList, ref List<RaycastResult> raycastResults)
+        protected virtual void SetNearestRaycast(ref PointerEventData eventData,
+            ref List<RaycastResult> resultAppendList, ref List<RaycastResult> raycastResults)
         {
             RaycastResult? nearestRaycast = null;
             for (int index = 0; index < raycastResults.Count; index++)
@@ -78,6 +82,7 @@
                 {
                     nearestRaycast = castResult;
                 }
+
                 VRTK4_SharedMethods.AddListValue(resultAppendList, castResult);
             }
 
@@ -95,7 +100,7 @@
         {
             if (canvas.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
             {
-                float maxDistance = Vector3.Distance(ray.origin, canvas.transform.position);
+                float maxDistance = Vector3.Distance(ray.origin, canvas.transform.position) + 10f;
 
                 if (blockingObjects == BlockingObjects.ThreeD || blockingObjects == BlockingObjects.All)
                 {
@@ -117,11 +122,13 @@
                     }
                 }
             }
+
             return hitDistance;
         }
 
         //[Pure]
-        protected virtual void Raycast(Canvas canvas, Camera eventCamera, PointerEventData eventData, Ray ray, ref List<RaycastResult> results)
+        protected virtual void Raycast(Canvas canvas, Camera eventCamera, PointerEventData eventData, Ray ray,
+            ref List<RaycastResult> results)
         {
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
             IList<Graphic> canvasGraphics = GraphicRegistry.GetGraphicsForCanvas(canvas);
@@ -136,7 +143,8 @@
 
                 Transform graphicTransform = graphic.transform;
                 Vector3 graphicForward = graphicTransform.forward;
-                float distance = Vector3.Dot(graphicForward, graphicTransform.position - ray.origin) / Vector3.Dot(graphicForward, ray.direction);
+                float distance = Vector3.Dot(graphicForward, graphicTransform.position - ray.origin) /
+                                 Vector3.Dot(graphicForward, ray.direction);
 
                 if (distance < 0)
                 {
@@ -152,7 +160,8 @@
                 Vector3 position = ray.GetPoint(distance);
                 Vector2 pointerPosition = eventCamera.WorldToScreenPoint(position);
 
-                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, pointerPosition, eventCamera))
+                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, pointerPosition,
+                    eventCamera))
                 {
                     continue;
                 }

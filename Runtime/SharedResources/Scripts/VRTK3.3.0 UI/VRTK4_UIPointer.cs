@@ -26,6 +26,7 @@ namespace Tilia.VRTKUI
     /// `VRTK/Examples/034_Controls_InteractingWithUnityUI` uses the `VRTK_UIPointer` script on the right Controller to allow for the interaction with Unity UI elements using a Simple Pointer beam. The left Controller controls a Simple Pointer on the headset to demonstrate gaze interaction with Unity UI elements.
     /// </example>
     [DisallowMultipleComponent]
+    [RequireComponent(typeof(Vrtk4UiToPointer))]
     public class VRTK4_UIPointer : MonoBehaviour
     {
         private static List<VRTK4_UIPointer> VrtkUiPointers = new List<VRTK4_UIPointer>();
