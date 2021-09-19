@@ -258,7 +258,7 @@ namespace Tilia.VRTKUI
             }
         }
 
-        public virtual void OnActivationButtonPressed()
+        protected virtual void OnActivationButtonPressed()
         {
             if (ActivationButtonPressed != null)
             {
@@ -266,7 +266,7 @@ namespace Tilia.VRTKUI
             }
         }
 
-        public virtual void OnActivationButtonReleased()
+        protected virtual void OnActivationButtonReleased()
         {
             if (ActivationButtonReleased != null)
             {
@@ -274,7 +274,7 @@ namespace Tilia.VRTKUI
             }
         }
 
-        public virtual void OnSelectionButtonPressed()
+        protected virtual void OnSelectionButtonPressed()
         {
             if (SelectionButtonPressed != null)
             {
@@ -282,7 +282,7 @@ namespace Tilia.VRTKUI
             }
         }
 
-        public virtual void OnSelectionButtonReleased()
+        protected virtual void OnSelectionButtonReleased()
         {
             if (SelectionButtonReleased != null)
             {
@@ -331,12 +331,12 @@ namespace Tilia.VRTKUI
         }
 
         public virtual VRTK4UIPointerEventArgs SetUIPointerEvent(RaycastResult currentRaycastResult,
-            GameObject currentTarget, GameObject lastTarget = null)
+            GameObject newCurrentTarget, GameObject lastTarget = null)
         {
             VRTK4UIPointerEventArgs e;
             e.UIPointerId = GetIndexOfUIPointer();
             e.isActive = PointerActive();
-            e.currentTarget = currentTarget;
+            e.currentTarget = newCurrentTarget;
             e.previousTarget = lastTarget;
             e.raycastResult = currentRaycastResult;
             return e;
@@ -347,7 +347,7 @@ namespace Tilia.VRTKUI
         /// </summary>
         /// <param name="eventSystem">The global Unity event system to be used by the UI pointers.</param>
         /// <returns>A custom input module that is used to detect input from VR pointers.</returns>
-        public virtual VRTK4_VRInputModule SetEventSystem()
+        protected virtual VRTK4_VRInputModule SetEventSystem()
         {
             EventSystem eventSystem = EventSystem.current;
             if (eventSystem == null)
@@ -363,7 +363,7 @@ namespace Tilia.VRTKUI
                     gameObject);
                 return null;
             }
-            
+
             var eventSystemGameObject = eventSystem.gameObject;
             if (eventSystem.GetType() != typeof(VRTK4_EventSystem))
             {
@@ -546,7 +546,7 @@ namespace Tilia.VRTKUI
         {
             VrtkUiPointers.Remove(this);
 
-            if (cachedVRInputModule && cachedVRInputModule.Pointers.Contains(this))
+            if (cachedVRInputModule)
             {
                 cachedVRInputModule.Pointers.Remove(this);
             }
