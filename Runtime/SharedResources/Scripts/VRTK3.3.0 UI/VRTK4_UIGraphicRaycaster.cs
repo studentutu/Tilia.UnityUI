@@ -1,6 +1,4 @@
-﻿using UnityEngine.Assertions;
-
-namespace Tilia.VRTKUI
+﻿namespace Tilia.VRTKUI
 {
     using System;
     using System.Collections.Generic;
@@ -20,14 +18,13 @@ namespace Tilia.VRTKUI
     public class VRTK4_UIGraphicRaycaster : GraphicRaycaster
     {
         public static VRTK4_UIPointer CurrentPointer;
-        protected Canvas currentCanvas;
-        protected Vector2 lastKnownPosition;
+        protected Canvas currentCanvas = null;
         protected const float UI_CONTROL_OFFSET = 0.00001f;
 
         // Use a static to prevent list reallocation. We only need one of these globally (single main thread), and only to hold temporary data
         [NonSerialized] private static List<RaycastResult> s_RaycastResults = new List<RaycastResult>();
 
-        protected virtual Canvas canvas
+        protected virtual Canvas CanvasToUse
         {
             get
             {
@@ -48,7 +45,7 @@ namespace Tilia.VRTKUI
         /// <param name="resultAppendList"> actual hits on UI elements under canvases</param>
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            if (canvas == null || eventCamera == null)
+            if (CanvasToUse == null || eventCamera == null)
             {
                 return;
             }
@@ -64,43 +61,31 @@ namespace Tilia.VRTKUI
                     eventData.pointerCurrentRaycast.worldNormal);
             }
 
-            Raycast(canvas, eventCamera, eventData, ray, ref s_RaycastResults);
-            SetNearestRaycast(ref eventData, ref resultAppendList, ref s_RaycastResults);
+            s_RaycastResults.Clear();
+            Raycast(CanvasToUse, eventCamera, eventData, ray, ref s_RaycastResults);
+            AppendToListAllCurrentRaycasts(ref resultAppendList, ref s_RaycastResults);
             s_RaycastResults.Clear();
         }
 
-        //[Pure]
-        protected virtual void SetNearestRaycast(ref PointerEventData eventData,
-            ref List<RaycastResult> resultAppendList, ref List<RaycastResult> raycastResults)
+        /// <summary>
+        /// Fills the list of cast rays
+        /// </summary>
+        protected virtual void AppendToListAllCurrentRaycasts(ref List<RaycastResult> resultAppendList,
+            ref List<RaycastResult> raycastResults)
         {
-            RaycastResult? nearestRaycast = null;
-            for (int index = 0; index < raycastResults.Count; index++)
+            int totalCount = raycastResults.Count;
+            for (int index = 0; index < totalCount; index++)
             {
-                RaycastResult castResult = raycastResults[index];
-                castResult.index = resultAppendList.Count;
-                if (!nearestRaycast.HasValue || castResult.distance < nearestRaycast.Value.distance)
-                {
-                    nearestRaycast = castResult;
-                }
-
-                VRTK4_SharedMethods.AddListValue(resultAppendList, castResult);
-            }
-
-            if (nearestRaycast.HasValue)
-            {
-                eventData.position = nearestRaycast.Value.screenPosition;
-                eventData.delta = eventData.position - lastKnownPosition;
-                lastKnownPosition = eventData.position;
-                eventData.pointerCurrentRaycast = nearestRaycast.Value;
+                VRTK4_SharedMethods.AddListValue(resultAppendList, raycastResults[index]);
             }
         }
 
-        //[Pure]
+        // Skip check for near/far plane!
         protected virtual float GetHitDistance(Ray ray, float hitDistance)
         {
-            if (canvas.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
+            if (CanvasToUse.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
             {
-                float maxDistance = Vector3.Distance(ray.origin, canvas.transform.position) + 10f;
+                float maxDistance = Vector3.Distance(ray.origin, CanvasToUse.transform.position) + 10f;
 
                 if (blockingObjects == BlockingObjects.ThreeD || blockingObjects == BlockingObjects.All)
                 {
@@ -126,17 +111,25 @@ namespace Tilia.VRTKUI
             return hitDistance;
         }
 
-        //[Pure]
-        protected virtual void Raycast(Canvas canvas, Camera eventCamera, PointerEventData eventData, Ray ray,
-            ref List<RaycastResult> results)
+        /// <summary>
+        /// Changes - ignore displays. Improved Performance : no need to sort graphics only, we can sort all raycast once.
+        /// </summary>
+        /// <param name="canvasIn"></param>
+        /// <param name="eventCameraIn"></param>
+        /// <param name="eventData"></param>
+        /// <param name="ray"></param>
+        /// <param name="helperList"></param>
+        protected virtual void Raycast(Canvas canvasIn, Camera eventCameraIn, PointerEventData eventData, Ray ray,
+            ref List<RaycastResult> helperList)
         {
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
-            IList<Graphic> canvasGraphics = GraphicRegistry.GetGraphicsForCanvas(canvas);
-            for (int i = 0; i < canvasGraphics.Count; ++i)
+            IList<Graphic> canvasGraphics = GraphicRegistry.GetRaycastableGraphicsForCanvas(canvasIn);
+            int totalCount = canvasGraphics.Count;
+            for (int i = 0; i < totalCount; ++i)
             {
                 Graphic graphic = canvasGraphics[i];
 
-                if (graphic.depth == -1 || !graphic.raycastTarget)
+                if (graphic.depth == -1 || !graphic.raycastTarget || graphic.canvasRenderer.cull)
                 {
                     continue;
                 }
@@ -158,32 +151,35 @@ namespace Tilia.VRTKUI
                 }
 
                 Vector3 position = ray.GetPoint(distance);
-                Vector2 pointerPosition = eventCamera.WorldToScreenPoint(position);
+                Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
 
-                if (!RectTransformUtility.RectangleContainsScreenPoint(graphic.rectTransform, pointerPosition,
-                    eventCamera))
+                if (!RectTransformUtility.RectangleContainsScreenPoint(
+                    graphic.rectTransform,
+                    pointerPosition,
+                    eventCameraIn, graphic.raycastPadding))
                 {
                     continue;
                 }
 
-                if (graphic.Raycast(pointerPosition, eventCamera))
+                if (graphic.Raycast(pointerPosition, eventCameraIn))
                 {
                     RaycastResult result = new RaycastResult()
                     {
                         gameObject = graphic.gameObject,
                         module = this,
                         distance = distance,
-                        screenPosition = pointerPosition,
                         worldPosition = position,
+                        worldNormal = -graphicForward,
+                        screenPosition = pointerPosition,
                         depth = graphic.depth,
-                        sortingLayer = canvas.sortingLayerID,
-                        sortingOrder = canvas.sortingOrder,
+                        sortingLayer = canvasIn.sortingLayerID,
+                        sortingOrder = canvasIn.sortingOrder,
                     };
-                    VRTK4_SharedMethods.AddListValue(results, result);
+                    VRTK4_SharedMethods.AddListValue(helperList, result);
                 }
             }
 
-            results.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
+            helperList.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
         }
     }
 }

@@ -1,4 +1,7 @@
 ﻿// Shared Methods|Utilities|90060
+
+using UnityEngine;
+
 namespace Tilia.VRTKUI
 {
     using System.Collections.Generic;
@@ -18,7 +21,8 @@ namespace Tilia.VRTKUI
         /// <param name="defaultValue">The value to utilise when either setting the missing key (if `setMissingKey` is `true`) or the default value to return when no key is found (if `setMissingKey` is `false`).</param>
         /// <param name="setMissingKey">If this is `true` and the given key is not present, then the dictionary value for the given key will be set to the `defaultValue` parameter. If this is `false` and the given key is not present then the `defaultValue` parameter will be returned as the value.</param>
         /// <returns>The found value for the given key in the given dictionary, or the default value if no key is found.</returns>
-        public static TValue GetDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, TValue defaultValue = default(TValue), bool setMissingKey = false)
+        public static TValue GetDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key,
+            TValue defaultValue = default(TValue), bool setMissingKey = false)
         {
             bool keyExists;
             return GetDictionaryValue(dictionary, key, out keyExists, defaultValue, setMissingKey);
@@ -35,7 +39,8 @@ namespace Tilia.VRTKUI
         /// <param name="defaultValue">The value to utilise when either setting the missing key (if `setMissingKey` is `true`) or the default value to return when no key is found (if `setMissingKey` is `false`).</param>
         /// <param name="setMissingKey">If this is `true` and the given key is not present, then the dictionary value for the given key will be set to the `defaultValue` parameter. If this is `false` and the given key is not present then the `defaultValue` parameter will be returned as the value.</param>
         /// <returns>The found value for the given key in the given dictionary, or the default value if no key is found.</returns>
-        public static TValue GetDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, out bool keyExists, TValue defaultValue = default(TValue), bool setMissingKey = false)
+        public static TValue GetDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key,
+            out bool keyExists, TValue defaultValue = default(TValue), bool setMissingKey = false)
         {
             keyExists = false;
             if (dictionary == null)
@@ -54,8 +59,10 @@ namespace Tilia.VRTKUI
                 {
                     dictionary.Add(key, defaultValue);
                 }
+
                 outputValue = defaultValue;
             }
+
             return outputValue;
         }
 
@@ -69,7 +76,8 @@ namespace Tilia.VRTKUI
         /// <param name="value">The value to set at the given key in the given dictionary.</param>
         /// <param name="overwriteExisting">If this is `true` then the value for the given key will always be set to the provided value. If this is `false` then the value for the given key will only be set if the given key is not found in the given dictionary.</param>
         /// <returns>Returns `true` if the given value was successfully added to the dictionary at the given key. Returns `false` if the given key already existed in the dictionary and `overwriteExisting` is `false`.</returns>
-        public static bool AddDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, TValue value, bool overwriteExisting = false)
+        public static bool AddDictionaryValue<TKey, TValue>(Dictionary<TKey, TValue> dictionary, TKey key, TValue value,
+            bool overwriteExisting = false)
         {
             if (dictionary != null)
             {
@@ -85,9 +93,10 @@ namespace Tilia.VRTKUI
                     return !keyExists;
                 }
             }
+
             return false;
         }
-        
+
         /// <summary>
         /// The AddListValue method adds the given value to the given list. If `preventDuplicates` is `true` then the given value will only be added if it doesn't already exist in the given list.
         /// </summary>
@@ -103,7 +112,15 @@ namespace Tilia.VRTKUI
                 list.Add(value);
                 return true;
             }
+
             return false;
+        }
+
+        public static string GetPath(Transform current)
+        {
+            if (current.parent == null)
+                return "/" + current.name;
+            return GetPath(current.parent) + "/" + current.name;
         }
     }
 }

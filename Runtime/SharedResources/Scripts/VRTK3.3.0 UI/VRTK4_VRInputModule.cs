@@ -55,7 +55,17 @@
             pointer.pointerEventData.pointerCurrentRaycast = raycastResult;
             VRTK4_UIGraphicRaycaster.CurrentPointer = pointer;
             raycasts.Clear();
-            eventSystem.RaycastAll(pointer.pointerEventData, raycasts);
+            eventSystem.RaycastAll(pointer.pointerEventData, raycasts); // already sorted!
+            // raycasts.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
+            if (raycasts.Count > 0)
+            {
+                var toUse = raycasts[0];
+                var lastKnownPosition = pointer.pointerEventData.position;
+                pointer.pointerEventData.position = toUse.screenPosition;
+                pointer.pointerEventData.delta = pointer.pointerEventData.position - lastKnownPosition;
+                pointer.pointerEventData.pointerCurrentRaycast = toUse;
+            }
+
             VRTK4_UIGraphicRaycaster.CurrentPointer = null;
             return raycasts;
         }

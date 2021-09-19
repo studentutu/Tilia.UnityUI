@@ -47,9 +47,9 @@
             RemoveCanvas();
         }
 
-        protected virtual void OnTriggerEnter(Collider collider)
+        protected virtual void OnTriggerEnter(Collider currentCollider)
         {
-            VRTK4_PlayerObject colliderCheck = collider.GetComponentInParent<VRTK4_PlayerObject>();
+            VRTK4_PlayerObject colliderCheck = currentCollider.GetComponentInParent<VRTK4_PlayerObject>();
             VRTK4_UIPointer pointerCheck = colliderCheck == null? null: colliderCheck.GetPointer();
             if (pointerCheck != null && colliderCheck != null && 
                 colliderCheck.objectType == VRTK4_PlayerObject.ObjectTypes.Pointer)
@@ -58,9 +58,9 @@
             }
         }
 
-        protected virtual void OnTriggerExit(Collider collider)
+        protected virtual void OnTriggerExit(Collider currentCollider)
         {
-            VRTK4_PlayerObject colliderCheck = collider.GetComponentInParent<VRTK4_PlayerObject>();
+            VRTK4_PlayerObject colliderCheck = currentCollider.GetComponentInParent<VRTK4_PlayerObject>();
             VRTK4_UIPointer pointerCheck = colliderCheck == null? null: colliderCheck.GetPointer();
             if (pointerCheck != null)
             {
