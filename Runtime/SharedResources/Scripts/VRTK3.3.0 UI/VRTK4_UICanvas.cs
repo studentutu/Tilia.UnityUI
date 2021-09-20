@@ -11,14 +11,11 @@
     /// </summary>
     /// <remarks>
     /// **Script Usage:**
-    ///  * Place the `VRTK_UICanvas` script on the Unity World UI Canvas to allow UIPointer interactions with.
+    ///  * Place the `VRTK4_UICanvas` script on the Unity World UI Canvas to allow UIPointer interactions with.
     ///
     /// **Script Dependencies:**
     ///  * A UI Pointer attached to another GameObject (e.g. controller script alias) to interact with the UICanvas script.
     /// </remarks>
-    /// <example>
-    /// `VRTK/Examples/034_Controls_InteractingWithUnityUI` uses the `VRTK_UICanvas` script on two of the canvases to show how the UI Pointer can interact with them.
-    /// </example>
     public class VRTK4_UICanvas : MonoBehaviour
     {
         [Tooltip(
