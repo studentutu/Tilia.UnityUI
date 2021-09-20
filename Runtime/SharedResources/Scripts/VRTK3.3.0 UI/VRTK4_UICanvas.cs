@@ -21,9 +21,12 @@
     /// </example>
     public class VRTK4_UICanvas : MonoBehaviour
     {
-        [Tooltip("Determines if a UI Click action should happen when a UI Pointer game object collides with this canvas.")]
+        [Tooltip(
+            "Determines if a UI Click action should happen when a UI Pointer game object collides with this canvas.")]
         public bool clickOnPointerCollision = false;
-        [Tooltip("Determines if a UI Pointer will be auto activated if a UI Pointer game object comes within the given distance of this canvas. If a value of `0` is given then no auto activation will occur.")]
+
+        [Tooltip(
+            "Determines if a UI Pointer will be auto activated if a UI Pointer game object comes within the given distance of this canvas. If a value of `0` is given then no auto activation will occur.")]
         public float autoActivateWithinDistance = 0f;
 
         protected BoxCollider canvasBoxCollider;
@@ -50,8 +53,8 @@
         protected virtual void OnTriggerEnter(Collider currentCollider)
         {
             VRTK4_PlayerObject colliderCheck = currentCollider.GetComponentInParent<VRTK4_PlayerObject>();
-            VRTK4_UIPointer pointerCheck = colliderCheck == null? null: colliderCheck.GetPointer();
-            if (pointerCheck != null && colliderCheck != null && 
+            VRTK4_UIPointer pointerCheck = colliderCheck == null ? null : colliderCheck.GetPointer();
+            if (pointerCheck != null && colliderCheck != null &&
                 colliderCheck.objectType == VRTK4_PlayerObject.ObjectTypes.Pointer)
             {
                 pointerCheck.collisionClick = clickOnPointerCollision;
@@ -61,7 +64,7 @@
         protected virtual void OnTriggerExit(Collider currentCollider)
         {
             VRTK4_PlayerObject colliderCheck = currentCollider.GetComponentInParent<VRTK4_PlayerObject>();
-            VRTK4_UIPointer pointerCheck = colliderCheck == null? null: colliderCheck.GetPointer();
+            VRTK4_UIPointer pointerCheck = colliderCheck == null ? null : colliderCheck.GetPointer();
             if (pointerCheck != null)
             {
                 pointerCheck.collisionClick = false;
@@ -81,7 +84,7 @@
             {
                 Debug.LogError(
                     string.Format("{0} REQUIRED_COMPONENT_MISSING_FROM_GAMEOBJECT {1} Make sure {2}",
-                    nameof(VRTK4_UICanvas), gameObject.name, "that Canvas is set to `Render Mode = World Space`"), 
+                        nameof(VRTK4_UICanvas), gameObject.name, "that Canvas is set to `Render Mode = World Space`"),
                     gameObject);
                 return;
             }
@@ -106,7 +109,7 @@
 
                 //Use Reflection to transfer the BlockingMask
                 customRaycaster.GetType()
-                    .GetField("m_BlockingMask", 
+                    .GetField("m_BlockingMask",
                         BindingFlags.Instance | BindingFlags.NonPublic).SetValue(
                         customRaycaster,
                         defaultRaycaster.GetType()
@@ -129,6 +132,7 @@
                 canvasBoxCollider.center = new Vector3(canvasSize.x / 2 - canvasSize.x * pivot.x,
                     canvasSize.y / 2 - canvasSize.y * pivot.y, zScale / 2f);
                 canvasBoxCollider.isTrigger = true;
+                canvasBoxCollider.gameObject.layer = UnityEngine.LayerMask.NameToLayer("UI");
             }
 
             if (canvas.gameObject.GetComponent<Rigidbody>() == null)
@@ -164,31 +168,37 @@
         protected virtual void CreateActivator(Canvas canvas, Vector2 canvasSize)
         {
             //if autoActivateWithinDistance is greater than 0 then create the front collider sub object
-            if (autoActivateWithinDistance > 0f && canvas != null && !canvas.transform.Find(ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT))
+            if (autoActivateWithinDistance > 0f && canvas != null &&
+                !canvas.transform.Find(ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT))
             {
                 var comp = canvas.gameObject.GetComponent<Rigidbody>();
-                if (comp  == null)
+                if (comp == null)
                 {
                     comp = canvas.gameObject.AddComponent<Rigidbody>();
                 }
+
                 comp.isKinematic = true;
                 var anoptherComp = canvas.gameObject.GetComponent<VRTK_UIPointerAutoActivator>();
                 if (anoptherComp == null)
                 {
                     canvas.gameObject.AddComponent<VRTK_UIPointerAutoActivator>();
                 }
+
                 RectTransform canvasRectTransform = canvas.GetComponent<RectTransform>();
                 Vector2 pivot = canvasRectTransform.pivot;
 
                 GameObject frontTrigger = new GameObject(ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT);
                 frontTrigger.transform.SetParent(canvas.transform);
                 frontTrigger.transform.SetAsFirstSibling();
-                frontTrigger.transform.localPosition = new Vector3(canvasSize.x / 2 - canvasSize.x * pivot.x, canvasSize.y / 2 - canvasSize.y * pivot.y);
+                frontTrigger.transform.localPosition = new Vector3(canvasSize.x / 2 - canvasSize.x * pivot.x,
+                    canvasSize.y / 2 - canvasSize.y * pivot.y);
                 frontTrigger.transform.localRotation = Quaternion.identity;
                 frontTrigger.transform.localScale = Vector3.one;
                 frontTrigger.layer = LayerMask.NameToLayer("Ignore Raycast");
 
-                float actualActivationDistance = canvasRectTransform.localScale.z > 0 ? autoActivateWithinDistance / canvasRectTransform.localScale.z : 1;
+                float actualActivationDistance = canvasRectTransform.localScale.z > 0
+                    ? autoActivateWithinDistance / canvasRectTransform.localScale.z
+                    : 1;
                 BoxCollider boxColl = frontTrigger.AddComponent<BoxCollider>();
                 boxColl.size = new Vector3(canvasSize.x, canvasSize.y, actualActivationDistance);
                 boxColl.center = new Vector3(0f, 0f, -(actualActivationDistance / 2));
