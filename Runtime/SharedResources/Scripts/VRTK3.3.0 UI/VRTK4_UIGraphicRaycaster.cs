@@ -18,6 +18,8 @@
     public class VRTK4_UIGraphicRaycaster : GraphicRaycaster
     {
         public static VRTK4_UIPointer CurrentPointer;
+        private static RaycastHit[] st_arrayOfRaycasts = new RaycastHit[10];
+        private static RaycastHit2D[] st_arrayOfRaycasts2d = new RaycastHit2D[10];
         protected Canvas currentCanvas = null;
         protected const float UI_CONTROL_OFFSET = 0.00001f;
 
@@ -86,29 +88,57 @@
             if (CanvasToUse.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
             {
                 float maxDistance = Vector3.Distance(ray.origin, CanvasToUse.transform.position) + 10f;
-
+                int allraycasts = -1;
                 if (blockingObjects == BlockingObjects.ThreeD || blockingObjects == BlockingObjects.All)
                 {
-                    RaycastHit hit;
-                    Physics.Raycast(ray, out hit, maxDistance, m_BlockingMask);
-                    if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
+                    allraycasts = Physics.RaycastNonAlloc(ray, st_arrayOfRaycasts, maxDistance, m_BlockingMask);
+                    if (allraycasts > 0)
                     {
-                        hitDistance = hit.distance;
+                        RaycastHit hit = st_arrayOfRaycasts[0];
+                        if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
+                        {
+                            hitDistance = hit.distance;
+                        }
                     }
+
+                    ClearArrNonAlloc3D();
                 }
 
                 if (blockingObjects == BlockingObjects.TwoD || blockingObjects == BlockingObjects.All)
                 {
-                    RaycastHit2D hit = Physics2D.Raycast(ray.origin, ray.direction, maxDistance);
-
-                    if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
+                    allraycasts = Physics2D.RaycastNonAlloc(ray.origin, ray.direction, st_arrayOfRaycasts2d,
+                        maxDistance,
+                        m_BlockingMask);
+                    if (allraycasts > 0)
                     {
-                        hitDistance = hit.fraction * maxDistance;
+                        RaycastHit2D hit = st_arrayOfRaycasts2d[0];
+                        if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
+                        {
+                            hitDistance = hit.fraction * maxDistance;
+                        }
                     }
+
+                    ClearArrNonAlloc2D();
                 }
             }
 
             return hitDistance;
+        }
+
+        private static void ClearArrNonAlloc3D()
+        {
+            for (int i = 0; i < st_arrayOfRaycasts.Length; i++)
+            {
+                st_arrayOfRaycasts[i] = default;
+            }
+        }
+
+        private static void ClearArrNonAlloc2D()
+        {
+            for (int i = 0; i < st_arrayOfRaycasts2d.Length; i++)
+            {
+                st_arrayOfRaycasts2d[i] = default;
+            }
         }
 
         /// <summary>
