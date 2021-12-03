@@ -290,6 +290,29 @@ namespace Tilia.VRTKUI
             }
         }
 
+        public static bool CheckIfObjectIsHovered(GameObject targetObject)
+        {
+            foreach (var pointer in VrtkUiPointers)
+            {
+                if (pointer.currentTarget == targetObject)
+                {
+                    return true;
+                }
+                
+                if (targetObject == pointer.hoveringElement)
+                {
+                    return true;
+                }
+                
+                if (targetObject == pointer.pointerEventData.pointerEnter)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         public static VRTK4_UIPointer GetByEventData(PointerEventData eventData)
         {
             foreach (var pointer in VrtkUiPointers)
@@ -298,12 +321,11 @@ namespace Tilia.VRTKUI
                 {
                     return pointer;
                 }
-
+                
                 if (eventData.selectedObject == pointer.currentTarget)
                 {
                     return pointer;
                 }
-
 
                 foreach (var hoveredWith in eventData.hovered)
                 {
