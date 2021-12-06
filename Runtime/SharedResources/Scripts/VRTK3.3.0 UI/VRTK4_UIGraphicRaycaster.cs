@@ -39,6 +39,18 @@
                 return currentCanvas;
             }
         }
+        
+        public static string WholePath(Transform current)
+        {
+            string name = current.name;
+            Transform parent = current.transform.parent;
+            while (parent != null)
+            {
+                name = parent.name + "/" + name;
+                parent = parent.parent;
+            }
+            return name;
+        }
 
         /// <summary>
         /// Enables to raycast event from any point towards any VRTK4_Canvas (even when outside the view)
@@ -51,7 +63,7 @@
             {
                 return;
             }
-
+            
             Ray ray;
             if (CurrentPointer != null)
             {
@@ -152,6 +164,7 @@
         protected virtual void Raycast(Canvas canvasIn, Camera eventCameraIn, PointerEventData eventData, Ray ray,
             ref List<RaycastResult> helperList)
         {
+            bool checkRaycastGraphic = false;
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
             IList<Graphic> canvasGraphics = GraphicRegistry.GetRaycastableGraphicsForCanvas(canvasIn);
             int totalCount = canvasGraphics.Count;
@@ -182,7 +195,7 @@
 
                 Vector3 position = ray.GetPoint(distance);
                 Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
-
+                
                 if (!RectTransformUtility.RectangleContainsScreenPoint(
                     graphic.rectTransform,
                     pointerPosition,
@@ -191,7 +204,10 @@
                     continue;
                 }
 
-                if (graphic.Raycast(pointerPosition, eventCameraIn))
+                checkRaycastGraphic = graphic.Raycast(pointerPosition, eventCameraIn);
+                
+                if(checkRaycastGraphic ||
+                   QuickRaycastTargetGraphicCheck(graphic,pointerPosition, eventCameraIn))
                 {
                     RaycastResult result = new RaycastResult()
                     {
@@ -210,6 +226,74 @@
             }
 
             helperList.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
+        }
+
+        private static List<Component> _components = new List<Component>(10);
+        
+        /// <summary>
+        /// FIX: UNITY Graphic.Raycast UI -> it will go up even if the current one is already a button! 
+        /// When a GraphicRaycaster is raycasting into the scene it does two things. First it filters the elements using their RectTransform rect. Then it uses this Raycast function to determine the elements hit by the raycast.
+        /// </summary>
+        /// <param name="sp">Screen point being tested</param>
+        /// <param name="eventCamera">Camera that is being used for the testing.</param>
+        /// <returns>True if the provided point is a valid location for GraphicRaycaster raycasts.</returns>
+        private static bool QuickRaycastTargetGraphicCheck(Graphic graphic, Vector2 sp, Camera eventCamera)
+        {
+            if (!graphic.isActiveAndEnabled)
+                return false;
+
+            var t = graphic.transform;
+            _components.Clear();
+            bool ignoreParentGroups = false;
+            bool continueTraversal = true;
+
+            while (t != null)
+            {
+                _components.Clear();
+                _components.AddRange(graphic.GetComponents<Component>());
+                for (var i = 0; i < _components.Count; i++)
+                {
+                    var canvas = _components[i] as Canvas;
+                    if (canvas != null && canvas.overrideSorting)
+                        continueTraversal = false;
+
+                    var selectable = _components[i] as Selectable;
+                    if (selectable != null)
+                        continueTraversal = false;
+
+                    var filter = _components[i] as ICanvasRaycastFilter;
+
+                    if (filter == null)
+                        continue;
+
+                    var raycastValid = true;
+
+                    var group = _components[i] as CanvasGroup;
+                    if (group != null)
+                    {
+                        if (ignoreParentGroups == false && group.ignoreParentGroups)
+                        {
+                            ignoreParentGroups = true;
+                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+                        }
+                        else if (!ignoreParentGroups)
+                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+                    }
+                    else
+                    {
+                        raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
+                    }
+
+                    if (!raycastValid)
+                    {
+                        _components.Clear();
+                        return false;
+                    }
+                }
+                t = continueTraversal ? t.parent : null;
+            }
+            _components.Clear();
+            return true;
         }
     }
 }
