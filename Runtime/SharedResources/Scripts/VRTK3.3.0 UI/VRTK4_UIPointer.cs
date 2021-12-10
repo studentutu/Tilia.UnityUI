@@ -312,6 +312,29 @@ namespace Tilia.VRTKUI
 
             return false;
         }
+        
+        public static VRTK4_UIPointer CheckAndGetPointerIfObjectIsHovered(GameObject targetObject)
+        {
+            foreach (var pointer in VrtkUiPointers)
+            {
+                if (pointer.currentTarget == targetObject)
+                {
+                    return pointer;
+                }
+                
+                if (targetObject == pointer.hoveringElement)
+                {
+                    return pointer;
+                }
+                
+                if (targetObject == pointer.pointerEventData.pointerEnter)
+                {
+                    return pointer;
+                }
+            }
+
+            return null;
+        }
 
         public static VRTK4_UIPointer GetByEventData(PointerEventData eventData)
         {
