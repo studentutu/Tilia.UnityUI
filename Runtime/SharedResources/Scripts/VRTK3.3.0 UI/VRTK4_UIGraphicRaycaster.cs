@@ -39,7 +39,7 @@
                 return currentCanvas;
             }
         }
-        
+
         public static string WholePath(Transform current)
         {
             string name = current.name;
@@ -49,6 +49,7 @@
                 name = parent.name + "/" + name;
                 parent = parent.parent;
             }
+
             return name;
         }
 
@@ -63,7 +64,7 @@
             {
                 return;
             }
-            
+
             Ray ray;
             if (CurrentPointer != null)
             {
@@ -166,7 +167,12 @@
         {
             bool checkRaycastGraphic = false;
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
-            IList<Graphic> canvasGraphics = GraphicRegistry.GetRaycastableGraphicsForCanvas(canvasIn);
+            IList<Graphic> canvasGraphics = null;
+#if UNITY_2020_3_OR_NEWER
+            canvasGraphics = GraphicRegistry.GetRaycastableGraphicsForCanvas(canvasIn);
+#else
+            canvasGraphics = GraphicRegistry.GetGraphicsForCanvas(canvasIn);
+#endif
             int totalCount = canvasGraphics.Count;
             for (int i = 0; i < totalCount; ++i)
             {
@@ -195,7 +201,7 @@
 
                 Vector3 position = ray.GetPoint(distance);
                 Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
-                
+#if UNITY_2020_3_OR_NEWER
                 if (!RectTransformUtility.RectangleContainsScreenPoint(
                     graphic.rectTransform,
                     pointerPosition,
@@ -204,10 +210,20 @@
                     continue;
                 }
 
+#else
+                if (!RectTransformUtility.RectangleContainsScreenPoint(
+                    graphic.rectTransform,
+                    pointerPosition,
+                    eventCameraIn))
+                {
+                    continue;
+                }
+#endif
+
                 checkRaycastGraphic = graphic.Raycast(pointerPosition, eventCameraIn);
-                
-                if(checkRaycastGraphic ||
-                   QuickRaycastTargetGraphicCheck(graphic,pointerPosition, eventCameraIn))
+
+                if (checkRaycastGraphic ||
+                    QuickRaycastTargetGraphicCheck(graphic, pointerPosition, eventCameraIn))
                 {
                     RaycastResult result = new RaycastResult()
                     {
@@ -229,7 +245,7 @@
         }
 
         private static List<Component> _components = new List<Component>(10);
-        
+
         /// <summary>
         /// FIX: UNITY Graphic.Raycast UI -> it will go up even if the current one is already a button! 
         /// When a GraphicRaycaster is raycasting into the scene it does two things. First it filters the elements using their RectTransform rect. Then it uses this Raycast function to determine the elements hit by the raycast.
@@ -290,8 +306,10 @@
                         return false;
                     }
                 }
+
                 t = continueTraversal ? t.parent : null;
             }
+
             _components.Clear();
             return true;
         }
