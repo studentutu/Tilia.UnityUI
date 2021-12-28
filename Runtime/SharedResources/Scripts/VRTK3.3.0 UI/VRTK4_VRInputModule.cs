@@ -2,7 +2,6 @@
 {
     using UnityEngine;
     using UnityEngine.EventSystems;
-    using UnityEngine.UI;
     using System.Collections.Generic;
 
     /// <summary>
@@ -11,12 +10,13 @@
     public class VRTK4_VRInputModule : PointerInputModule
     {
         public List<VRTK4_UIPointer> Pointers = new List<VRTK4_UIPointer>();
-        protected List<RaycastResult> raycasts = new List<RaycastResult>();
+        private List<RaycastResult> raycasts = new List<RaycastResult>();
 
-        public virtual void Initialise()
-        {
-            Pointers.Clear();
-        }
+        private Dictionary<VRTK4_UIPointer, List<RaycastResult>> PointersWithRaycasts =
+            new Dictionary<VRTK4_UIPointer, List<RaycastResult>>();
+
+        private List<List<RaycastResult>> poolOfLists = new List<List<RaycastResult>>(2);
+
 
         //Needed to allow other regular (non-VR) InputModules in combination with VRTK_EventSystem
         public override bool IsModuleSupported()
@@ -26,24 +26,57 @@
 
         public override void Process()
         {
+            if (poolOfLists.Count == 0)
+            {
+                poolOfLists.Add(new List<RaycastResult>(30));
+                poolOfLists.Add(new List<RaycastResult>(30));
+            }
+
+            while (poolOfLists.Count < Pointers.Count)
+            {
+                poolOfLists.Add(new List<RaycastResult>(30));
+            }
+
+            for (int i = 0; i < poolOfLists.Count; i++)
+            {
+                poolOfLists[i].Clear();
+            }
+
+            PointersWithRaycasts.Clear();
+            for (int i = 0; i < Pointers.Count; i++)
+            {
+                PointersWithRaycasts.Add(Pointers[i], poolOfLists[i]);
+            }
+
             for (int i = 0; i < Pointers.Count; i++)
             {
                 VRTK4_UIPointer pointer = Pointers[i];
                 if (pointer.gameObject.activeInHierarchy && pointer.enabled)
                 {
-                    List<RaycastResult> results = new List<RaycastResult>();
                     if (pointer.PointerActive() || pointer.autoActivatingCanvas != null)
                     {
-                        results = CheckRaycasts(pointer);
+                        PointersWithRaycasts[pointer].AddRange(CheckRaycasts(pointer));
                     }
-
-                    //Process events
-                    Hover(pointer, results);
-                    Click(pointer, results);
-                    Drag(pointer, results);
-                    Scroll(pointer, results);
                 }
             }
+
+            //Process Hover events
+            Hover();
+            // Process events
+            for (int i = 0; i < Pointers.Count; i++)
+            {
+                VRTK4_UIPointer pointer = Pointers[i];
+                Click(pointer, PointersWithRaycasts[pointer]);
+                Drag(pointer, PointersWithRaycasts[pointer]);
+                Scroll(pointer, PointersWithRaycasts[pointer]);
+            }
+
+            for (int i = 0; i < poolOfLists.Count; i++)
+            {
+                poolOfLists[i].Clear();
+            }
+
+            PointersWithRaycasts.Clear();
         }
 
         protected virtual List<RaycastResult> CheckRaycasts(VRTK4_UIPointer pointer)
@@ -91,6 +124,11 @@
                 pointer.pointerEventData.pointerEnter.transform));
         }
 
+        /// <summary>
+        /// Can only be used after the processing!
+        /// </summary>
+        /// <param name="pointer"></param>
+        /// <returns></returns>
         protected virtual bool IsHovering(VRTK4_UIPointer pointer)
         {
             for (int i = 0; i < pointer.pointerEventData.hovered.Count; i++)
@@ -118,7 +156,7 @@
             return canvasCheck != null && canvasCheck.enabled;
         }
 
-        protected virtual void CheckPointerHoverClick(VRTK4_UIPointer pointer, List<RaycastResult> results)
+        private void CheckPointerHoverClick(VRTK4_UIPointer pointer, List<RaycastResult> results)
         {
             if (pointer.hoverDurationTimer > 0f)
             {
@@ -132,78 +170,155 @@
             }
         }
 
-        protected virtual void Hover(VRTK4_UIPointer pointer, List<RaycastResult> results)
+        public enum UsageOfHover
         {
-            if (pointer.pointerEventData.pointerEnter != null)
-            {
-                CheckPointerHoverClick(pointer, results);
-                if (!ValidElement(pointer.pointerEventData.pointerEnter))
-                {
-                    pointer.pointerEventData.pointerEnter = null;
-                    return;
-                }
+            OnEnter,
+            OnExit
+        }
 
-                if (NoValidCollision(pointer, results))
-                {
-                    ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerEnter, pointer.pointerEventData,
-                        ExecuteEvents.pointerExitHandler);
-                    pointer.pointerEventData.hovered.Remove(pointer.pointerEventData.pointerEnter);
-                    pointer.pointerEventData.pointerEnter = null;
-                }
+        private class UsageHoverLast
+        {
+            public GameObject gameObject;
+            public VRTK4_UIPointer pointerExit;
+            public VRTK4_UIPointer pointerEnter;
+            public UsageOfHover lastUsage;
+        }
+
+        private static void AddOrChange(Dictionary<GameObject, UsageHoverLast> dict, GameObject go,
+            VRTK4_UIPointer pointer, UsageOfHover hoverUsage)
+        {
+            if (!dict.ContainsKey(go))
+            {
+                dict.Add(go, new UsageHoverLast());
             }
 
-            for (int i = 0; i < 1 && i < results.Count; i++)
+            dict[go].lastUsage = hoverUsage;
+            dict[go].gameObject = go;
+            if (hoverUsage == UsageOfHover.OnEnter)
             {
-                RaycastResult result = results[i];
-                GameObject target = ExecuteEvents.ExecuteHierarchy(result.gameObject, pointer.pointerEventData,
-                    ExecuteEvents.pointerEnterHandler);
-                if (!ValidElement(result.gameObject))
+                dict[go].pointerEnter = pointer;
+            }
+            else
+            {
+                dict[go].pointerExit = pointer;
+            }
+        }
+
+        private static readonly Dictionary<GameObject, UsageHoverLast> listPointerEnterExit =
+            new Dictionary<GameObject, UsageHoverLast>(8);
+
+
+        protected virtual void Hover()
+        {
+            listPointerEnterExit.Clear();
+
+            foreach (var item in PointersWithRaycasts)
+            {
+                VRTK4_UIPointer pointer = item.Key;
+
+                if (pointer.pointerEventData.pointerEnter != null)
                 {
+                    CheckPointerHoverClick(pointer, item.Value);
+                }
+
+
+                if (pointer.pointerEventData.pointerEnter != null &&
+                    !ValidElement(pointer.pointerEventData.pointerEnter))
+                {
+                    AddOrChange(listPointerEnterExit, pointer.pointerEventData.pointerEnter, pointer,
+                        UsageOfHover.OnExit);
+                    pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(new RaycastResult(), null,
+                        pointer.pointerEventData.pointerEnter));
+                    pointer.pointerEventData.pointerEnter = null;
                     continue;
                 }
 
-                target = (target == null ? result.gameObject : target);
-
-                if (target != null)
+                if (pointer.pointerEventData.pointerEnter != null &&
+                    NoValidCollision(pointer, item.Value))
                 {
-                    Selectable selectable = target.GetComponent<Selectable>();
-                    if (selectable != null)
+                    pointer.pointerEventData.hovered.Remove(pointer.pointerEventData.pointerEnter);
+
+                    AddOrChange(listPointerEnterExit, pointer.pointerEventData.pointerEnter, pointer,
+                        UsageOfHover.OnExit);
+                    pointer.pointerEventData.pointerEnter = null;
+                }
+            }
+
+            foreach (var item in PointersWithRaycasts)
+            {
+                VRTK4_UIPointer pointer = item.Key;
+                for (int i = 0; i < 1 && i < item.Value.Count; i++)
+                {
+                    RaycastResult result = item.Value[i];
+                    if (!ValidElement(result.gameObject))
                     {
-                        Navigation noNavigation = new Navigation();
-                        noNavigation.mode = Navigation.Mode.None;
-                        selectable.navigation = noNavigation;
+                        continue;
                     }
 
-                    if (pointer.hoveringElement != null && pointer.hoveringElement != target)
+                    GameObject target = ExecuteEvents.GetEventHandler<IPointerEnterHandler>(result.gameObject);
+                    // listPointerEnter.Add(pointer.pointerEventData.pointerEnter);
+
+                    target = (target == null ? result.gameObject : target);
+
+                    if (target != null)
                     {
-                        pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(result, null,
+                        if (pointer.hoveringElement != null && pointer.hoveringElement != target)
+                        {
+                            AddOrChange(listPointerEnterExit, pointer.hoveringElement, pointer,
+                                UsageOfHover.OnExit);
+                            pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(result, null,
+                                pointer.hoveringElement));
+                        }
+
+                        pointer.OnUIPointerElementEnter(pointer.SetUIPointerEvent(result, target,
+                            pointer.hoveringElement));
+                        pointer.hoveringElement = target;
+                        pointer.pointerEventData.pointerCurrentRaycast = result;
+                        pointer.pointerEventData.pointerEnter = target;
+                        pointer.pointerEventData.hovered.Add(pointer.pointerEventData.pointerEnter);
+                        AddOrChange(listPointerEnterExit, pointer.pointerEventData.pointerEnter, pointer,
+                            UsageOfHover.OnEnter);
+                        break;
+                    }
+
+                    if (result.gameObject != pointer.hoveringElement)
+                    {
+                        AddOrChange(listPointerEnterExit, result.gameObject, pointer,
+                            UsageOfHover.OnEnter);
+                        pointer.OnUIPointerElementEnter(pointer.SetUIPointerEvent(result, result.gameObject,
                             pointer.hoveringElement));
                     }
 
-                    pointer.OnUIPointerElementEnter(pointer.SetUIPointerEvent(result, target,
-                        pointer.hoveringElement));
-                    pointer.hoveringElement = target;
-                    pointer.pointerEventData.pointerCurrentRaycast = result;
-                    pointer.pointerEventData.pointerEnter = target;
-                    pointer.pointerEventData.hovered.Add(pointer.pointerEventData.pointerEnter);
-                    break;
+                    pointer.hoveringElement = result.gameObject;
                 }
 
-                if (result.gameObject != pointer.hoveringElement)
+                if (pointer.hoveringElement != null && item.Value.Count == 0)
                 {
-                    pointer.OnUIPointerElementEnter(pointer.SetUIPointerEvent(result, result.gameObject,
+                    AddOrChange(listPointerEnterExit, pointer.hoveringElement, pointer,
+                        UsageOfHover.OnExit);
+                    pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(new RaycastResult(), null,
                         pointer.hoveringElement));
+                    pointer.hoveringElement = null;
                 }
-
-                pointer.hoveringElement = result.gameObject;
             }
 
-            if (pointer.hoveringElement && results.Count == 0)
+            foreach (var item in listPointerEnterExit)
             {
-                pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(new RaycastResult(), null,
-                    pointer.hoveringElement));
-                pointer.hoveringElement = null;
+                if (item.Value.lastUsage == UsageOfHover.OnEnter)
+                {
+                    ExecuteEvents.ExecuteHierarchy(item.Value.gameObject,
+                        item.Value.pointerEnter.pointerEventData,
+                        ExecuteEvents.pointerEnterHandler);
+                }
+                else
+                {
+                    ExecuteEvents.ExecuteHierarchy(item.Value.gameObject,
+                        item.Value.pointerExit.pointerEventData,
+                        ExecuteEvents.pointerExitHandler);
+                }
             }
+
+            listPointerEnterExit.Clear();
         }
 
         protected virtual void Click(VRTK4_UIPointer pointer, List<RaycastResult> results)

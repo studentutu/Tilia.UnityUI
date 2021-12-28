@@ -32,8 +32,6 @@
         protected const string CANVAS_DRAGGABLE_PANEL = "VRTK_UICANVAS_DRAGGABLE_PANEL";
         protected const string ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT = "VRTK_UICANVAS_ACTIVATOR_FRONT_TRIGGER";
 
-        private bool isInitialized = false;
-
         protected virtual void OnEnable()
         {
             StartCoroutine(WaitOneFrame());

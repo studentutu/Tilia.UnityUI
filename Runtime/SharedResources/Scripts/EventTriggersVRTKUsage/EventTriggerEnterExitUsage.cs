@@ -1,11 +1,9 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
 
-namespace Tilia.UnityUi
+namespace Tilia.UnityUI
 {
     [Serializable]
     public class TiliaUnityEventTriggerSubscriber
@@ -100,7 +98,7 @@ namespace Tilia.UnityUi
         }
     }
 
-    public class TestTiliaEventTriggers : MonoBehaviour
+    public class EventTriggerEnterExitUsage : MonoBehaviour
     {
         [SerializeField] private TiliaUnityEventTriggerSubscriber OnEnter =
             new TiliaUnityEventTriggerSubscriber(EventTriggerType.PointerEnter);
@@ -108,47 +106,36 @@ namespace Tilia.UnityUi
         [SerializeField] private TiliaUnityEventTriggerSubscriber OnExit =
             new TiliaUnityEventTriggerSubscriber(EventTriggerType.PointerExit);
 
-        [SerializeField] private TiliaUnityEventTriggerSubscriber OnStartDrag =
-            new TiliaUnityEventTriggerSubscriber(EventTriggerType.BeginDrag);
-
-        [SerializeField] private TiliaUnityEventTriggerSubscriber OnEndDrag =
-            new TiliaUnityEventTriggerSubscriber(EventTriggerType.EndDrag);
-
+        private bool _isAlreadyEntered = false;
 
         private void OnEnable()
         {
+            _isAlreadyEntered = false;
             OnEnter.AddListener(OnEnterListener);
             OnExit.AddListener(OnExitListener);
-            OnStartDrag.AddListener(OnStartDragListener);
-            OnEndDrag.AddListener(OnEndDragListener);
-        }
-
-        private void OnEndDragListener(BaseEventData arg0)
-        {
-            Debug.LogWarning("OnEndDrag " + OnEndDrag.Target.gameObject.name, OnEndDrag.Target.gameObject);
-        }
-
-        private void OnStartDragListener(BaseEventData arg0)
-        {
-            Debug.LogWarning("OnStartDrag " + OnStartDrag.Target.gameObject.name, OnStartDrag.Target.gameObject);
         }
 
         private void OnExitListener(BaseEventData arg0)
         {
-            Debug.LogWarning("OnExit " + OnExit.Target.gameObject.name, OnExit.Target.gameObject);
+            _isAlreadyEntered = false;
+            Debug.LogWarning("OnExit " + OnExit.Target.gameObject.name, OnExit.Target);
         }
 
         private void OnEnterListener(BaseEventData arg0)
         {
-            Debug.LogWarning("OnEntered " + OnEnter.Target.gameObject.name, OnEnter.Target.gameObject);
+            if (_isAlreadyEntered)
+            {
+                return;
+            }
+
+            _isAlreadyEntered = true;
+            Debug.LogWarning("OnEntered " + OnEnter.Target.gameObject.name, OnEnter.Target);
         }
 
         private void OnDisable()
         {
             OnEnter.RemoveListener(OnEnterListener);
             OnExit.RemoveListener(OnExitListener);
-            OnStartDrag.RemoveListener(OnStartDragListener);
-            OnEndDrag.RemoveListener(OnEndDragListener);
         }
     }
 }

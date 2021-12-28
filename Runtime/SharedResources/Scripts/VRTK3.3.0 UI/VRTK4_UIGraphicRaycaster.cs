@@ -220,9 +220,10 @@
                 }
 #endif
 
-                checkRaycastGraphic = graphic.Raycast(pointerPosition, eventCameraIn);
+                // checkRaycastGraphic = graphic.Raycast(pointerPosition, eventCameraIn);
 
-                if (checkRaycastGraphic ||
+                if (
+                    // checkRaycastGraphic ||
                     QuickRaycastTargetGraphicCheck(graphic, pointerPosition, eventCameraIn))
                 {
                     RaycastResult result = new RaycastResult()
@@ -241,8 +242,14 @@
                 }
             }
 
-            helperList.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
+            helperList.Sort(ComparisonInversed);
         }
+
+        private static int ComparisonInversed(RaycastResult g1, RaycastResult g2)
+        {
+            return g2.depth.CompareTo(g1.depth);
+        }
+
 
         private static List<Component> _components = new List<Component>(10);
 
@@ -266,7 +273,7 @@
             while (t != null)
             {
                 _components.Clear();
-                _components.AddRange(graphic.GetComponents<Component>());
+                graphic.GetComponents<Component>(_components);
                 for (var i = 0; i < _components.Count; i++)
                 {
                     var canvas = _components[i] as Canvas;
