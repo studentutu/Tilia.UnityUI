@@ -207,17 +207,21 @@
         private static readonly Dictionary<GameObject, UsageHoverLast> listPointerEnterExit =
             new Dictionary<GameObject, UsageHoverLast>(8);
 
+        private static readonly Dictionary<VRTK4_UIPointer, GameObject> _alreadyEntered =
+            new Dictionary<VRTK4_UIPointer, GameObject>();
+
 
         protected virtual void Hover()
         {
             listPointerEnterExit.Clear();
-
+            _alreadyEntered.Clear();
             foreach (var item in PointersWithRaycasts)
             {
                 VRTK4_UIPointer pointer = item.Key;
 
                 if (pointer.pointerEventData.pointerEnter != null)
                 {
+                    _alreadyEntered.Add(pointer, pointer.pointerEventData.pointerEnter);
                     CheckPointerHoverClick(pointer, item.Value);
                 }
 
@@ -306,6 +310,12 @@
             {
                 if (item.Value.lastUsage == UsageOfHover.OnEnter)
                 {
+                    if (_alreadyEntered.ContainsKey(item.Value.pointerEnter) &&
+                        _alreadyEntered[item.Value.pointerEnter] == item.Value.gameObject)
+                    {
+                        continue;
+                    }
+
                     ExecuteEvents.ExecuteHierarchy(item.Value.gameObject,
                         item.Value.pointerEnter.pointerEventData,
                         ExecuteEvents.pointerEnterHandler);
@@ -319,6 +329,7 @@
             }
 
             listPointerEnterExit.Clear();
+            _alreadyEntered.Clear();
         }
 
         protected virtual void Click(VRTK4_UIPointer pointer, List<RaycastResult> results)

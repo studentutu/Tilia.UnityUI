@@ -165,7 +165,7 @@
         protected virtual void Raycast(Canvas canvasIn, Camera eventCameraIn, PointerEventData eventData, Ray ray,
             ref List<RaycastResult> helperList)
         {
-            bool checkRaycastGraphic = false;
+            // bool checkRaycastGraphic = false;
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
             IList<Graphic> canvasGraphics = null;
 #if UNITY_2020_3_OR_NEWER

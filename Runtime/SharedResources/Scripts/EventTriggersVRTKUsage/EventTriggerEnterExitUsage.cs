@@ -1,4 +1,5 @@
 using System;
+using Tilia.VRTKUI;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.EventSystems;
@@ -117,12 +118,29 @@ namespace Tilia.UnityUI
 
         private void OnExitListener(BaseEventData arg0)
         {
+            if (OnExit.Target == null || !enabled)
+            {
+                return;
+            }
+
+            // when multiple pointers overlap - each of them executes all events.
+            // Make Sure to check if the object itself is still hovered by any of the pointers.
+            if (VRTK4_UIPointer.CheckIfObjectIsHovered(OnExit.Target.gameObject))
+            {
+                return;
+            }
+
             _isAlreadyEntered = false;
             Debug.LogWarning("OnExit " + OnExit.Target.gameObject.name, OnExit.Target);
         }
 
         private void OnEnterListener(BaseEventData arg0)
         {
+            if (OnEnter.Target == null)
+            {
+                return;
+            }
+
             if (_isAlreadyEntered)
             {
                 return;
