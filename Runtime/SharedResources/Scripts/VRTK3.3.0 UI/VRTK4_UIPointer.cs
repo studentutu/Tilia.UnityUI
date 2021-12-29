@@ -298,12 +298,12 @@ namespace Tilia.VRTKUI
                 {
                     return true;
                 }
-                
+
                 if (targetObject == pointer.hoveringElement)
                 {
                     return true;
                 }
-                
+
                 if (targetObject == pointer.pointerEventData.pointerEnter)
                 {
                     return true;
@@ -312,7 +312,7 @@ namespace Tilia.VRTKUI
 
             return false;
         }
-        
+
         public static VRTK4_UIPointer CheckAndGetPointerIfObjectIsHovered(GameObject targetObject)
         {
             foreach (var pointer in VrtkUiPointers)
@@ -321,12 +321,12 @@ namespace Tilia.VRTKUI
                 {
                     return pointer;
                 }
-                
+
                 if (targetObject == pointer.hoveringElement)
                 {
                     return pointer;
                 }
-                
+
                 if (targetObject == pointer.pointerEventData.pointerEnter)
                 {
                     return pointer;
@@ -344,7 +344,7 @@ namespace Tilia.VRTKUI
                 {
                     return pointer;
                 }
-                
+
                 if (eventData.selectedObject == pointer.currentTarget)
                 {
                     return pointer;
@@ -357,6 +357,16 @@ namespace Tilia.VRTKUI
                         return pointer;
                     }
                 }
+            }
+
+            return null;
+        }
+
+        public static VRTK4_UIPointer GetByPointerId(int pointerId)
+        {
+            if (VrtkUiPointers.Count > pointerId)
+            {
+                return VrtkUiPointers[pointerId];
             }
 
             return null;
