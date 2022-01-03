@@ -40,19 +40,6 @@
             }
         }
 
-        public static string WholePath(Transform current)
-        {
-            string name = current.name;
-            Transform parent = current.transform.parent;
-            while (parent != null)
-            {
-                name = parent.name + "/" + name;
-                parent = parent.parent;
-            }
-
-            return name;
-        }
-
         /// <summary>
         /// Enables to raycast event from any point towards any VRTK4_Canvas (even when outside the view)
         /// </summary>

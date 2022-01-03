@@ -87,9 +87,10 @@
 
             pointer.pointerEventData.pointerCurrentRaycast = raycastResult;
             VRTK4_UIGraphicRaycaster.CurrentPointer = pointer;
+            VRTK4_3DGraphicRaycaster.CurrentPointer = pointer;
             raycasts.Clear();
-            eventSystem.RaycastAll(pointer.pointerEventData, raycasts); // already sorted!
-            // raycasts.Sort((g1, g2) => g2.depth.CompareTo(g1.depth));
+            eventSystem.RaycastAll(pointer.pointerEventData, raycasts);
+            raycasts.Sort(ComparisonInversedDistance);
             if (raycasts.Count > 0)
             {
                 var toUse = raycasts[0];
@@ -100,7 +101,23 @@
             }
 
             VRTK4_UIGraphicRaycaster.CurrentPointer = null;
+            VRTK4_3DGraphicRaycaster.CurrentPointer = null;
             return raycasts;
+        }
+
+        private static int ComparisonInversedDistance(RaycastResult g1, RaycastResult g2)
+        {
+            if (g2.sortingOrder == 7)
+            {
+                return g2.distance.CompareTo(g1.distance);
+            }
+
+            if (g1.sortingOrder == 7)
+            {
+                return g2.distance.CompareTo(g1.distance);
+            }
+
+            return 0;
         }
 
         protected virtual bool CheckTransformTree(Transform target, Transform source)
@@ -152,8 +169,18 @@
         /// <returns></returns>
         protected virtual bool ValidElement(GameObject obj)
         {
+            bool isValid = false;
+            if (obj.layer != LayerMask.NameToLayer("UI"))
+            {
+                var anyHandler = obj.GetComponentInParent<IEventSystemHandler>();
+                if (anyHandler != null)
+                {
+                    isValid = true;
+                }
+            }
+
             VRTK4_UIGraphicRaycaster canvasCheck = obj.GetComponentInParent<VRTK4_UIGraphicRaycaster>();
-            return canvasCheck != null && canvasCheck.enabled;
+            return isValid || canvasCheck != null && canvasCheck.enabled;
         }
 
         private void CheckPointerHoverClick(VRTK4_UIPointer pointer, List<RaycastResult> results)
@@ -241,9 +268,10 @@
                     NoValidCollision(pointer, item.Value))
                 {
                     pointer.pointerEventData.hovered.Remove(pointer.pointerEventData.pointerEnter);
-
                     AddOrChange(listPointerEnterExit, pointer.pointerEventData.pointerEnter, pointer,
                         UsageOfHover.OnExit);
+                    pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(new RaycastResult(), null,
+                        pointer.pointerEventData.pointerEnter));
                     pointer.pointerEventData.pointerEnter = null;
                 }
             }

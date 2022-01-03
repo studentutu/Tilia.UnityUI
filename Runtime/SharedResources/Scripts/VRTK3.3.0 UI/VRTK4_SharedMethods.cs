@@ -1,6 +1,7 @@
 ﻿// Shared Methods|Utilities|90060
 
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace Tilia.VRTKUI
 {

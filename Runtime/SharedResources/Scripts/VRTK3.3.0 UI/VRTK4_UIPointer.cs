@@ -294,11 +294,6 @@ namespace Tilia.VRTKUI
         {
             foreach (var pointer in VrtkUiPointers)
             {
-                if (pointer.currentTarget == targetObject)
-                {
-                    return true;
-                }
-
                 if (targetObject == pointer.hoveringElement)
                 {
                     return true;
