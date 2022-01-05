@@ -307,7 +307,7 @@
                         pointer.hoveringElement = target;
                         pointer.pointerEventData.pointerCurrentRaycast = result;
                         pointer.pointerEventData.pointerEnter = target;
-                        pointer.pointerEventData.hovered.Add(pointer.pointerEventData.pointerEnter);
+                        AddCheckForDuplicates(pointer.pointerEventData.hovered, pointer.pointerEventData.pointerEnter);
                         AddOrChange(listPointerEnterExit, pointer.pointerEventData.pointerEnter, pointer,
                             UsageOfHover.OnEnter);
                         break;
@@ -326,6 +326,7 @@
 
                 if (pointer.hoveringElement != null && item.Value.Count == 0)
                 {
+                    pointer.pointerEventData.hovered.Clear();
                     AddOrChange(listPointerEnterExit, pointer.hoveringElement, pointer,
                         UsageOfHover.OnExit);
                     pointer.OnUIPointerElementExit(pointer.SetUIPointerEvent(new RaycastResult(), null,
@@ -358,6 +359,16 @@
 
             listPointerEnterExit.Clear();
             _alreadyEntered.Clear();
+        }
+
+        private static void AddCheckForDuplicates(List<GameObject> objects, GameObject potentiallyNew)
+        {
+            if (objects.Contains(potentiallyNew))
+            {
+                return;
+            }
+
+            objects.Add(potentiallyNew);
         }
 
         protected virtual void Click(VRTK4_UIPointer pointer, List<RaycastResult> results)
@@ -425,7 +436,7 @@
 
         protected virtual bool AttemptClick(VRTK4_UIPointer pointer)
         {
-            if (pointer.pointerEventData.pointerPress)
+            if (pointer.pointerEventData.pointerPress != null)
             {
                 if (!ValidElement(pointer.pointerEventData.pointerPress))
                 {
@@ -435,7 +446,8 @@
 
                 if (pointer.pointerEventData.eligibleForClick)
                 {
-                    if (!IsHovering(pointer))
+                    bool isHoveringBool = IsHovering(pointer);
+                    if (!isHoveringBool)
                     {
                         ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
                             ExecuteEvents.pointerUpHandler);
@@ -446,8 +458,12 @@
                 {
                     pointer.OnUIPointerElementClick(pointer.SetUIPointerEvent(
                         pointer.pointerEventData.pointerPressRaycast, pointer.pointerEventData.pointerPress));
-                    ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
-                        ExecuteEvents.pointerClickHandler);
+                    if (pointer.isValidStateForClickFromHover)
+                    {
+                        ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
+                            ExecuteEvents.pointerClickHandler);
+                    }
+
                     ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
                         ExecuteEvents.pointerUpHandler);
                     pointer.pointerEventData.pointerPress = null;

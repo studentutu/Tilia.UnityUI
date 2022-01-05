@@ -172,6 +172,7 @@ namespace Tilia.VRTKUI
         protected bool lastPointerPressState = false;
         protected bool lastPointerClickState = false;
         protected GameObject currentTarget;
+        public bool isValidStateForClickFromHover = false;
 
         // protected VRTK4_EventSystem cachedEventSystem;
         protected VRTK4_VRInputModule cachedVRInputModule;
@@ -200,6 +201,12 @@ namespace Tilia.VRTKUI
             }
 
             currentTarget = e.currentTarget;
+            isValidStateForClickFromHover = true;
+            if (pointerEventData.pointerPress != null && pointerEventData.pointerPress != currentTarget)
+            {
+                isValidStateForClickFromHover = false;
+            }
+
             if (UIPointerElementEnter != null)
             {
                 UIPointerElementEnter(this, e);
@@ -213,6 +220,7 @@ namespace Tilia.VRTKUI
                 ResetHoverTimer();
             }
 
+            isValidStateForClickFromHover = false;
             if (UIPointerElementExit != null)
             {
                 UIPointerElementExit(this, e);
@@ -236,9 +244,12 @@ namespace Tilia.VRTKUI
                 ResetHoverTimer();
             }
 
-            if (UIPointerElementClick != null)
+            if (isValidStateForClickFromHover)
             {
-                UIPointerElementClick(this, e);
+                if (UIPointerElementClick != null)
+                {
+                    UIPointerElementClick(this, e);
+                }
             }
         }
 
@@ -528,7 +539,8 @@ namespace Tilia.VRTKUI
         /// <returns>Returns `true` if the UI Click button is in a valid state to action a click, returns `false` if it is not in a valid state.</returns>
         public virtual bool ValidClick(bool checkLastClick, bool lastClickState = false)
         {
-            bool controllerClicked = (collisionClick ? collisionClick : IsSelectionButtonPressed());
+            bool controllerClicked =
+                (collisionClick ? collisionClick : IsSelectionButtonPressed());
             bool result = (checkLastClick
                 ? controllerClicked && lastPointerClickState == lastClickState
                 : controllerClicked);
