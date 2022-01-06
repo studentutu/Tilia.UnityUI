@@ -51,7 +51,7 @@
             for (int i = 0; i < Pointers.Count; i++)
             {
                 VRTK4_UIPointer pointer = Pointers[i];
-                if (pointer.gameObject.activeInHierarchy && pointer.enabled)
+                if (pointer != null && pointer.gameObject.activeInHierarchy && pointer.enabled)
                 {
                     if (pointer.PointerActive() || pointer.autoActivatingCanvas != null)
                     {
@@ -66,9 +66,12 @@
             for (int i = 0; i < Pointers.Count; i++)
             {
                 VRTK4_UIPointer pointer = Pointers[i];
-                Click(pointer, PointersWithRaycasts[pointer]);
-                Drag(pointer, PointersWithRaycasts[pointer]);
-                Scroll(pointer, PointersWithRaycasts[pointer]);
+                if (pointer != null && pointer.gameObject.activeInHierarchy && pointer.enabled)
+                {
+                    Click(pointer, PointersWithRaycasts[pointer]);
+                    Drag(pointer, PointersWithRaycasts[pointer]);
+                    Scroll(pointer, PointersWithRaycasts[pointer]);
+                }
             }
 
             for (int i = 0; i < poolOfLists.Count; i++)
