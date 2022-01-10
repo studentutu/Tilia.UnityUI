@@ -1,4 +1,5 @@
-﻿using Zinnia.Action;
+﻿using System;
+using Zinnia.Action;
 
 namespace Tilia.VRTKUI
 {
@@ -172,7 +173,8 @@ namespace Tilia.VRTKUI
         protected bool lastPointerPressState = false;
         protected bool lastPointerClickState = false;
         protected GameObject currentTarget;
-        public bool isValidStateForClickFromHover = false;
+        [NonSerialized] public bool IsValidStateForClickFromHover = false;
+        [NonSerialized] public bool ExplicitBlockClickOnce = false;
 
         // protected VRTK4_EventSystem cachedEventSystem;
         protected VRTK4_VRInputModule cachedVRInputModule;
@@ -201,10 +203,10 @@ namespace Tilia.VRTKUI
             }
 
             currentTarget = e.currentTarget;
-            isValidStateForClickFromHover = true;
+            IsValidStateForClickFromHover = true;
             if (pointerEventData.pointerPress != null && pointerEventData.pointerPress != currentTarget)
             {
-                isValidStateForClickFromHover = false;
+                IsValidStateForClickFromHover = false;
             }
 
             if (UIPointerElementEnter != null)
@@ -220,7 +222,8 @@ namespace Tilia.VRTKUI
                 ResetHoverTimer();
             }
 
-            isValidStateForClickFromHover = false;
+            ExplicitBlockClickOnce = false;
+            IsValidStateForClickFromHover = false;
             if (UIPointerElementExit != null)
             {
                 UIPointerElementExit(this, e);
@@ -244,7 +247,7 @@ namespace Tilia.VRTKUI
                 ResetHoverTimer();
             }
 
-            if (isValidStateForClickFromHover)
+            if (IsValidStateForClickFromHover && !ExplicitBlockClickOnce)
             {
                 if (UIPointerElementClick != null)
                 {

@@ -461,11 +461,13 @@
                 {
                     pointer.OnUIPointerElementClick(pointer.SetUIPointerEvent(
                         pointer.pointerEventData.pointerPressRaycast, pointer.pointerEventData.pointerPress));
-                    if (pointer.isValidStateForClickFromHover)
+                    if (pointer.IsValidStateForClickFromHover && !pointer.ExplicitBlockClickOnce)
                     {
                         ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
                             ExecuteEvents.pointerClickHandler);
                     }
+
+                    pointer.ExplicitBlockClickOnce = false;
 
                     ExecuteEvents.ExecuteHierarchy(pointer.pointerEventData.pointerPress, pointer.pointerEventData,
                         ExecuteEvents.pointerUpHandler);
