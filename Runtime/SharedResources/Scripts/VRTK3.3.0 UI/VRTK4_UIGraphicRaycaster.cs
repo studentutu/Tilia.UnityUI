@@ -47,7 +47,7 @@
         /// <param name="resultAppendList"> actual hits on UI elements under canvases</param>
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            if (CanvasToUse == null || eventCamera == null)
+            if (CanvasToUse == null || eventCamera == null || !eventCamera.enabled)
             {
                 return;
             }
