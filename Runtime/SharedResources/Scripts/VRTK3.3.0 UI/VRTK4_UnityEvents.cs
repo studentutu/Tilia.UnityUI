@@ -20,7 +20,7 @@
             else
             {
                 string eventsScriptName = GetType().Name;
-                string scriptName = component.GetType().Name;
+                string scriptName = typeof(T).Name;
                 Debug.LogError(
                     string.Format("The {0} script requires to be attached to a GameObject that contains a {1} script.", eventsScriptName, scriptName),
                     gameObject);
