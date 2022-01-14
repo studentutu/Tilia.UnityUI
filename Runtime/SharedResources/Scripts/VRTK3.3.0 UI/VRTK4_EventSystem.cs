@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Tilia.VRTKUI
 {
@@ -50,7 +49,7 @@ namespace Tilia.VRTKUI
 
         protected override void OnEnable()
         {
-            previousEventSystem = current;
+            previousEventSystem = EventSystem.current;
             if (previousEventSystem != null)
             {
                 previousEventSystem.enabled = false;
