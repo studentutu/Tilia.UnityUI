@@ -32,6 +32,11 @@ namespace Tilia.VRTKUI
         protected VRTK4_VRInputModule vrInputModule;
         public VRTK4_VRInputModule VRInputModule => vrInputModule;
 
+        public static bool IsVRTK4Active()
+        {
+            return _instance != null;
+        }
+
         private static readonly FieldInfo[] EVENT_SYSTEM_FIELD_INFOS =
             typeof(EventSystem).GetFields(BindingFlags.Public | BindingFlags.Instance);
 

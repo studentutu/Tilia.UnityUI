@@ -36,7 +36,7 @@ namespace Tilia.VRTKUI
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            if (eventCamera == null || !eventCamera.enabled)
+            if (eventCamera == null || !eventCamera.enabled || VRTK4_EventSystem.Instance == null)
             {
                 return;
             }

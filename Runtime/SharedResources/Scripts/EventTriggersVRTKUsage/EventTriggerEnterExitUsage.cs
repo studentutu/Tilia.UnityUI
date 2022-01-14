@@ -123,6 +123,12 @@ namespace Tilia.UnityUI
                 return;
             }
 
+            if (!VRTK4_EventSystem.IsVRTK4Active())
+            {
+                ForceExit();
+                return;
+            }
+
             // when multiple pointers overlap - each of them executes all events.
             // Make Sure to check if the object itself is still hovered by any of the pointers.
             if (VRTK4_UIPointer.CheckIfObjectIsHovered(OnExit.Target.gameObject))
@@ -130,6 +136,11 @@ namespace Tilia.UnityUI
                 return;
             }
 
+            ForceExit();
+        }
+
+        private void ForceExit()
+        {
             _isAlreadyEntered = false;
             Debug.LogWarning("OnExit " + OnExit.Target.gameObject.name, OnExit.Target);
         }
@@ -141,11 +152,22 @@ namespace Tilia.UnityUI
                 return;
             }
 
+            if (!VRTK4_EventSystem.IsVRTK4Active())
+            {
+                ForceEnter();
+                return;
+            }
+
             if (_isAlreadyEntered)
             {
                 return;
             }
 
+            ForceEnter();
+        }
+
+        private void ForceEnter()
+        {
             _isAlreadyEntered = true;
             Debug.LogWarning("OnEntered " + OnEnter.Target.gameObject.name, OnEnter.Target);
         }

@@ -176,7 +176,6 @@ namespace Tilia.VRTKUI
         [NonSerialized] public bool IsValidStateForClickFromHover = false;
         [NonSerialized] public bool ExplicitBlockClickOnce = false;
 
-        // protected VRTK4_EventSystem cachedEventSystem;
         protected VRTK4_VRInputModule cachedVRInputModule;
 
         /// <summary>
@@ -184,8 +183,19 @@ namespace Tilia.VRTKUI
         /// </summary>
         /// <param name="pointerId">The pointer ID for the UI Pointer to recieve the length for.</param>
         /// <returns>The maximum length the UI Pointer will cast to.</returns>
-        public static float GetPointerLength(int pointerId)
+        internal static float GetPointerLength(int pointerId)
         {
+            if (EventSystem.current == null)
+            {
+                return 0;
+            }
+
+            var asVrtk4System = EventSystem.current as VRTK4_EventSystem;
+            if (asVrtk4System == null)
+            {
+                return 0;
+            }
+
             return VRTK4_SharedMethods.GetDictionaryValue(pointerLengths, pointerId, float.MaxValue);
         }
 
@@ -322,8 +332,22 @@ namespace Tilia.VRTKUI
             return false;
         }
 
+        /// <summary>
+        /// Please check if event system if VRTK4_EventSystem.IsVRTK4Active()
+        /// </summary>
         public static VRTK4_UIPointer CheckAndGetPointerIfObjectIsHovered(GameObject targetObject)
         {
+            if (EventSystem.current == null)
+            {
+                return null;
+            }
+
+            var asVrtk4System = EventSystem.current as VRTK4_EventSystem;
+            if (asVrtk4System == null)
+            {
+                return null;
+            }
+
             foreach (var pointer in VrtkUiPointers)
             {
                 if (pointer.currentTarget == targetObject)
@@ -345,8 +369,19 @@ namespace Tilia.VRTKUI
             return null;
         }
 
-        public static VRTK4_UIPointer GetByEventData(PointerEventData eventData)
+        internal static VRTK4_UIPointer GetByEventData(PointerEventData eventData)
         {
+            if (EventSystem.current == null)
+            {
+                return null;
+            }
+
+            var asVrtk4System = EventSystem.current as VRTK4_EventSystem;
+            if (asVrtk4System == null)
+            {
+                return null;
+            }
+
             foreach (var pointer in VrtkUiPointers)
             {
                 if (pointer.currentTarget == eventData.pointerCurrentRaycast.gameObject)
@@ -370,9 +405,23 @@ namespace Tilia.VRTKUI
 
             return null;
         }
-
+        
+        /// <summary>
+        /// Please check if event system if VRTK4_EventSystem.IsVRTK4Active()
+        /// </summary>
         public static VRTK4_UIPointer GetByPointerId(int pointerId)
         {
+            if (EventSystem.current == null)
+            {
+                return null;
+            }
+
+            var asVrtk4System = EventSystem.current as VRTK4_EventSystem;
+            if (asVrtk4System == null)
+            {
+                return null;
+            }
+
             if (VrtkUiPointers.Count > pointerId)
             {
                 return VrtkUiPointers[pointerId];

@@ -76,7 +76,7 @@
 
         protected virtual void SetupCanvas()
         {
-            if (this == null || !isActiveAndEnabled)
+            if (this == null || !isActiveAndEnabled || VRTK4_EventSystem.Instance == null)
             {
                 return;
             }
