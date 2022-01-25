@@ -405,7 +405,7 @@ namespace Tilia.VRTKUI
 
             return null;
         }
-        
+
         /// <summary>
         /// Please check if event system if VRTK4_EventSystem.IsVRTK4Active()
         /// </summary>
@@ -422,7 +422,7 @@ namespace Tilia.VRTKUI
                 return null;
             }
 
-            if (VrtkUiPointers.Count > pointerId)
+            if (VrtkUiPointers.Count > pointerId && pointerId >= 0)
             {
                 return VrtkUiPointers[pointerId];
             }
