@@ -207,11 +207,7 @@
                 }
 #endif
 
-                // checkRaycastGraphic = graphic.Raycast(pointerPosition, eventCameraIn);
-
-                if (
-                    // checkRaycastGraphic ||
-                    QuickRaycastTargetGraphicCheck(graphic, pointerPosition, eventCameraIn))
+                if (graphic.Raycast(pointerPosition, eventCameraIn))
                 {
                     RaycastResult result = new RaycastResult()
                     {
@@ -221,7 +217,7 @@
                         worldPosition = position,
                         worldNormal = -graphicForward,
                         screenPosition = pointerPosition,
-                        depth = graphic.depth,
+                        depth = graphic.depth + canvasIn.sortingLayerID * 1000 + canvasIn.sortingOrder,
                         sortingLayer = canvasIn.sortingLayerID,
                         sortingOrder = canvasIn.sortingOrder,
                     };
@@ -235,77 +231,6 @@
         private static int ComparisonInversed(RaycastResult g1, RaycastResult g2)
         {
             return g2.depth.CompareTo(g1.depth);
-        }
-
-
-        private static List<Component> _components = new List<Component>(10);
-
-        /// <summary>
-        /// FIX: UNITY Graphic.Raycast UI -> it will go up even if the current one is already a button! 
-        /// When a GraphicRaycaster is raycasting into the scene it does two things. First it filters the elements using their RectTransform rect. Then it uses this Raycast function to determine the elements hit by the raycast.
-        /// </summary>
-        /// <param name="sp">Screen point being tested</param>
-        /// <param name="eventCamera">Camera that is being used for the testing.</param>
-        /// <returns>True if the provided point is a valid location for GraphicRaycaster raycasts.</returns>
-        private static bool QuickRaycastTargetGraphicCheck(Graphic graphic, Vector2 sp, Camera eventCamera)
-        {
-            if (!graphic.isActiveAndEnabled)
-                return false;
-
-            var t = graphic.transform;
-            _components.Clear();
-            bool ignoreParentGroups = false;
-            bool continueTraversal = true;
-
-            while (t != null)
-            {
-                _components.Clear();
-                graphic.GetComponents<Component>(_components);
-                for (var i = 0; i < _components.Count; i++)
-                {
-                    var canvas = _components[i] as Canvas;
-                    if (canvas != null && canvas.overrideSorting)
-                        continueTraversal = false;
-
-                    var selectable = _components[i] as Selectable;
-                    if (selectable != null)
-                        continueTraversal = false;
-
-                    var filter = _components[i] as ICanvasRaycastFilter;
-
-                    if (filter == null)
-                        continue;
-
-                    var raycastValid = true;
-
-                    var group = _components[i] as CanvasGroup;
-                    if (group != null)
-                    {
-                        if (ignoreParentGroups == false && group.ignoreParentGroups)
-                        {
-                            ignoreParentGroups = true;
-                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
-                        }
-                        else if (!ignoreParentGroups)
-                            raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
-                    }
-                    else
-                    {
-                        raycastValid = filter.IsRaycastLocationValid(sp, eventCamera);
-                    }
-
-                    if (!raycastValid)
-                    {
-                        _components.Clear();
-                        return false;
-                    }
-                }
-
-                t = continueTraversal ? t.parent : null;
-            }
-
-            _components.Clear();
-            return true;
         }
     }
 }
