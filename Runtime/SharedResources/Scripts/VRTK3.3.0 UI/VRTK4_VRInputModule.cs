@@ -544,8 +544,12 @@
         // Still required to scroll over all elements
         protected virtual void Scroll(VRTK4_UIPointer pointer, List<RaycastResult> results)
         {
-            pointer.pointerEventData.scrollDelta =
-                (pointer.axisAction != null ? pointer.axisAction.Value : Vector2.zero);
+            if (pointer.axisAction == null)
+            {
+                return;
+            }
+
+            pointer.pointerEventData.scrollDelta = pointer.axisAction.Value;
             for (int i = 0; i < results.Count; i++)
             {
                 if (pointer.pointerEventData.scrollDelta != Vector2.zero)

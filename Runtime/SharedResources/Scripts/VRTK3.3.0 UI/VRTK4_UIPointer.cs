@@ -79,7 +79,7 @@ namespace Tilia.VRTKUI
             ClickOnButtonDown
         }
 
-        [Header("Activation Settings")] [Tooltip("The independent scroll axis from the device.")]
+        [Header("Activation Settings")] [Tooltip("Optional.The independent scroll axis from the device.")]
         public Vector2Action axisAction = null;
 
         [Tooltip("The button used to activate/deactivate the UI raycast for the pointer.")]

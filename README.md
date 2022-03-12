@@ -13,19 +13,20 @@ Support for Unity UI. Both New and Old input systems
 
 > **Requires** Unity Editor 2017.4 +
 
+[Full_Animation]
+
 
 ## Important usage
 
-    - Place VRTK4_UICanvas on each canvas
-    - You may leave Blocking mask as None (this way you will save some perfomance - no 3D raycasts will be performed)
-    - In addition to the VRTK4_UI_ToPointer add VRTK4_UIPointer add to the same gameobject (one is responsible for actual Raycasting, another one -> for Collision Detection)
-    - To Ignore Player Objects - Use Component VRTK4_Player Object (collision detection)
-    - Also, if you are using Pseudobody - add pointers to the IgnoredGameObjectList
-    - ON ALL UI ELEMENTS - buttons, sliders, inputfields, toggles, dropdown -> YOU MUST REMOVE DEFAULT UNITY NAVIGATION (navigation = none)!
-    - when using animations on the UI canvas -> add box collider on it in Editor mode -> Colliders are created at the awake - so it can be different when the target canvas is animated!
-    - When using Unity Event Triggers -> pointers will always perform their separate OnEnter/OnExit -> so please see Unity Event Triggers usage script
-    - All input fields must hide soft keyboard and hide mobile input. There is no default keyabord in this package. Please Use Custom one.
-    - When using input fields -> VR + Input Field Caret is not working properly. Make sure to use custom caret. Example See here -> https://gist.github.com/studentutu/714d78ad6cebfe147bfa852fb7046a90
+- Place VRTK4_UICanvas on each canvas
+- ON ALL UI ELEMENTS - buttons, sliders, inputfields, toggles, dropdown -> YOU MUST REMOVE DEFAULT UNITY NAVIGATION (navigation = none)!
+- You may leave Blocking mask as None (this way you will save on performance - no 3D raycasts will be performed)
+- To Ignore Player Objects - Use Component VRTK4_Player Object (collision detection)
+- Also, if you are using Pseudobody - add pointers to the IgnoredGameObjectList
+- when using animations on the UI canvas -> add box collider on it in Editor mode -> Colliders are created at the awake - so it can be different when the target canvas is animated!
+- When using Unity Event Triggers -> pointers will always perform their separate OnEnter/OnExit -> so please see Unity Event Triggers usage script
+- All input fields must hide soft keyboard and hide mobile input. There is no default keyboard in this package. Please Use Custom one.
+- When using input fields -> VR + Input Field Caret is not working properly. Make sure to use custom caret. Example See here -> https://gist.github.com/studentutu/714d78ad6cebfe147bfa852fb7046a90
     
 
 ## Getting Started
@@ -33,9 +34,9 @@ Support for Unity UI. Both New and Old input systems
 Please refer to the [installation] guide to install this package.
 
 See full scene and a separate prefab here :
-    /Runtime/Example -> here is a full scene with Custom Rig and UI Pointers atached
-    /Runtime/SharedResources/Prefabs - look for the L_Interactions.Interactor Variant -> which is a full Tilia Pointer with attached UI Pointer
-
+    /Runtime/Example/TestScene -> here is a full scene with Custom Rig and UI Pointers attached
+    /Runtime/SharedResources/Prefabs/[L_R]_ UI Pointer on Interactor.prefab  -> default UI Pointer, needs additional setup with Pointer, actions and PointerFacade
+    /Runtime/SharedResources/Prefabs/Full_L_Interactions.Interactor Variant.prefab -> FUll Tilia Pointer with attached UI Pointer
 
 
 ## Documentation
@@ -70,3 +71,4 @@ Code released under the [MIT License][License].
 [Releases]: ../../releases
 [Contributing guidelines]: https://github.com/ExtendRealityLtd/.github/blob/master/CONTRIBUTING.md
 [Code of Conduct]: https://github.com/ExtendRealityLtd/.github/blob/master/CODE_OF_CONDUCT.md
+[Full_Animation]: ./Documentation/HowToGuides/Installation/Animation.gif
