@@ -34,9 +34,12 @@ Support for Unity UI. Both New and Old input systems
 Please refer to the [installation] guide to install this package.
 
 See full scene and a separate prefab here :
-    /Runtime/Example/TestScene -> here is a full scene with Custom Rig and UI Pointers attached
-    /Runtime/SharedResources/Prefabs/[L_R]_ UI Pointer on Interactor.prefab  -> default UI Pointer, needs additional setup with Pointer, actions and PointerFacade
-    /Runtime/SharedResources/Prefabs/Full_L_Interactions.Interactor Variant.prefab -> FUll Tilia Pointer with attached UI Pointer
+
+/Runtime/Example/TestScene -> here is a full scene with Custom Rig and UI Pointers attached
+
+/Runtime/SharedResources/Prefabs/[L_R]_ UI Pointer on Interactor.prefab  -> default UI Pointer, needs additional setup with Pointer, actions and PointerFacade
+
+/Runtime/SharedResources/Prefabs/Full_L_Interactions.Interactor Variant.prefab -> FUll Tilia Pointer with attached UI Pointer
 
 
 ## Documentation
@@ -62,7 +65,7 @@ Code released under the [MIT License][License].
 [project coding conventions]: https://github.com/ExtendRealityLtd/.github/blob/master/CONVENTIONS/{project_type}
 
 [Tilia-Image]: https://user-images.githubusercontent.com/1029673/67681496-5bf10700-f985-11e9-9413-e61801b6eab5.png
-[License]: LICENSE.md
+[License]: /LICENSE.md
 [Documentation]: Documentation/
 [How To Guides]: Documentation/HowToGuides/
 [Installation]: Documentation/HowToGuides/Installation/README.md
