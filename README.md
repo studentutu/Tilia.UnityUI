@@ -5,15 +5,17 @@
 
 [![Release][Version-Release]][Releases]
 [![License][License-Badge]][License]
-[![Backlog][Backlog-Badge]][Backlog]
 
 ## Introduction
 
 Support for Unity UI. Both New and Old input systems
 
+![FullSetup](./Documentation/HowToGuides/Installation/Capture.PNG)
+
+
 > **Requires** Unity Editor 2017.4 +
 
-[Full_Animation]
+![Full_Animation]
 
 
 ## Important usage
@@ -60,18 +62,28 @@ Please refer to the Extend Reality [Code of Conduct].
 
 Code released under the [MIT License][License].
 
-[License-Badge]: https://img.shields.io/github/license/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}.svg
-[Version-Release]: https://img.shields.io/github/release/ExtendRealityLtd/Tilia.{scope}.{feature}.{platform?}.svg
-[project coding conventions]: https://github.com/ExtendRealityLtd/.github/blob/master/CONVENTIONS/{project_type}
+[License-Badge]: https://img.shields.io/github/license/ExtendRealityLtd/Tilia.Utilities.Shaders.Unity.svg
+
+[Version-Release]: https://img.shields.io/badge/package-v1.7.0-blue
+
+[project coding conventions]: https://github.com/ExtendRealityLtd/.github/blob/master/CONVENTIONS/UNITY3D.md
 
 [Tilia-Image]: https://user-images.githubusercontent.com/1029673/67681496-5bf10700-f985-11e9-9413-e61801b6eab5.png
-[License]: /LICENSE.md
+
+[License]: LICENSE.md
+
 [Documentation]: Documentation/
+
 [How To Guides]: Documentation/HowToGuides/
+
 [Installation]: Documentation/HowToGuides/Installation/README.md
-[Backlog]: http://tracker.vrtk.io
+
 [Backlog-Badge]: https://img.shields.io/badge/project-backlog-78bdf2.svg
+
 [Releases]: ../../releases
+
 [Contributing guidelines]: https://github.com/ExtendRealityLtd/.github/blob/master/CONTRIBUTING.md
+
 [Code of Conduct]: https://github.com/ExtendRealityLtd/.github/blob/master/CODE_OF_CONDUCT.md
+
 [Full_Animation]: ./Documentation/HowToGuides/Installation/Animation.gif
