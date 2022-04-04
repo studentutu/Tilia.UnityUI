@@ -2,7 +2,7 @@
     "name": "io.extendreality.tilia.unityui",
     "displayName": "Tilia Unity.UI",
     "description": "Support for Unity UI",
-    "version": "1.0.0",
+    "version": "1.7.0",
     "unity": "2018.3",
     "unityRelease": "10f1",
     "keywords": [
