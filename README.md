@@ -64,7 +64,7 @@ Code released under the [MIT License][License].
 
 [License-Badge]: https://img.shields.io/github/license/ExtendRealityLtd/Tilia.Utilities.Shaders.Unity.svg
 
-[Version-Release]: https://img.shields.io/badge/package-v1.7.0-blue
+[Version-Release]: https://img.shields.io/badge/package-2.0.1-blue
 
 [project coding conventions]: https://github.com/ExtendRealityLtd/.github/blob/master/CONVENTIONS/UNITY3D.md
 
