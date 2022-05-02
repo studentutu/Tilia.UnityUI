@@ -37,7 +37,8 @@
     "dependencies": {
         "io.extendreality.zinnia.unity": "2.0.0",
         "io.extendreality.tilia.interactions.interactables.unity": "2.0.1",
-        "io.extendreality.tilia.interactions.pointerinteractors.unity": "2.0.58"
+        "io.extendreality.tilia.interactions.pointerinteractors.unity": "2.0.5",
+        "io.extendreality.tilia.input.combinedactions.unity": "2.0.1"
     },
     "files": [
         "*.md",
