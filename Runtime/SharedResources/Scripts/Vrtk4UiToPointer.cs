@@ -1,14 +1,13 @@
-﻿namespace Tilia.VRTKUI
-{
-    using System;
-    using System.Collections;
-    using System.Collections.Generic;
-    using Tilia.Indicators.ObjectPointers;
-    using UnityEngine;
-    using Zinnia.Cast;
-    using Zinnia.Data.Type;
-    using Zinnia.Pointer;
+﻿using UnityEngine.Serialization;
+using System.Collections.Generic;
+using Tilia.Indicators.ObjectPointers;
+using UnityEngine;
+using Zinnia.Cast;
+using Zinnia.Data.Type;
+using Zinnia.Pointer;
 
+namespace Tilia.VRTKUI
+{
     /// <summary>
     /// Mediator component for working with VRTK 3.3.0 ported UI system
     /// </summary>
@@ -16,124 +15,159 @@
     public class Vrtk4UiToPointer : MonoBehaviour
     {
         [SerializeField] private PointerFacade pointerFacade;
-        [SerializeField] private bool applyButtonsFromFacade = false;
-        [SerializeField] private VRTK4_UIPointer UI_Pointer;
-        private List<Vector3> temporalList = new List<Vector3>(2);
-        private ObjectPointer.EventData eventData;
-        private PointsCast.EventData pointerCastEventData;
+        [SerializeField] private bool applyButtonsFromFacade;
+        [SerializeField, FormerlySerializedAs("UI_Pointer")] private VRTK4_UIPointer uiPointer;
+
+        private const float HoverEnterDuration = 0.1f;
+        private const float HoverExitDuration = 0.9f;
+        
+        private readonly List<Vector3> cachedRaycastResultWorldPositions = new(2);
+
+        private ObjectPointer.EventData objectPointerEventData;
+        private PointsCast.EventData pointsCastEventData;
 
         private void OnEnable()
         {
-            UI_Pointer.UIPointerElementEnter += HoverEnter;
-            UI_Pointer.UIPointerElementExit += OnHoverExit;
-            UI_Pointer.UIPointerElementClick += OnSelectEnter;
+            if (ValidateSerializedFields() == false)
+            {
+                return;
+            }
+
+            uiPointer.UIPointerElementEnter += HoverEnter;
+            uiPointer.UIPointerElementExit += OnHoverExit;
+            uiPointer.UIPointerElementClick += OnSelectEnter;
+
             if (applyButtonsFromFacade)
             {
-                UI_Pointer.activationButton = pointerFacade.ActivationAction;
-                UI_Pointer.selectionButton = pointerFacade.SelectionAction;
+                uiPointer.activationButton = pointerFacade.ActivationAction;
+                uiPointer.selectionButton = pointerFacade.SelectionAction;
             }
         }
 
         private void OnDisable()
         {
-            UI_Pointer.UIPointerElementEnter -= HoverEnter;
-            UI_Pointer.UIPointerElementExit -= OnHoverExit;
-            UI_Pointer.UIPointerElementClick -= OnSelectEnter;
-        }
-
-        /// <summary>
-        /// Generates all of the data for pointerfacade
-        /// </summary>
-        private void FillInEventData()
-        {
-            if (pointerCastEventData == null)
-            {
-                pointerCastEventData = new PointsCast.EventData();
-                pointerCastEventData.Clear();
-            }
-            pointerCastEventData.Clear();
-            pointerCastEventData.IsValid = true;
-            
-            if (eventData == null)
-            {
-                eventData = new ObjectPointer.EventData();
-                eventData.Transform = transform;
-                eventData.CurrentHoverDuration = 0.1f;
-            }
-            eventData.Clear();
-            eventData.UseLocalValues = false;
-            eventData.ScaleOverride = Vector3.one;
-            eventData.Direction = pointerFacade.transform.forward;
-            eventData.Origin = pointerFacade.Configuration.ObjectPointer.Origin.transform.position;
-            eventData.PositionOverride = eventData.Origin;
-            eventData.RotationOverride = pointerFacade.Configuration.ObjectPointer.Origin.transform.rotation;
-        }
-
-        private void HoverEnter(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventdata)
-        {
-            temporalList.Clear();
-            temporalList.Add(eventdata.raycastResult.worldPosition);
-
-            FillInEventData();
-            pointerCastEventData.IsValid = true;
-            var data = eventData;
-            data.CurrentHoverDuration = 0.1f;
-            data.IsCurrentlyHovering = true;
-            data.CurrentPointsCastData = pointerCastEventData;
-            data.CurrentPointsCastData.Points = new HeapAllocationFreeReadOnlyList<Vector3>(temporalList,0,temporalList.Count);
-            pointerFacade.Configuration.EmitHoverChanged(data);
-        }
-        
-        private void OnHoverExit(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventdata)
-        {
-            OnSelectExit(interactable, eventdata);
-            
-            temporalList.Clear();
-            temporalList.Add(eventdata.raycastResult.worldPosition);
-            
-            FillInEventData();
-            pointerCastEventData.IsValid = false;
-            var data = eventData;
-            data.CurrentHoverDuration = 0.9f;
-            data.IsCurrentlyHovering = false;
-            data.CurrentPointsCastData = pointerCastEventData;
-            data.CurrentPointsCastData.Points = new HeapAllocationFreeReadOnlyList<Vector3>(temporalList,0,temporalList.Count);
-            pointerFacade.Configuration.EmitHoverChanged(data);
-        }
-        
-        private void OnSelectEnter(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventdata)
-        {
-            if (interactable == null)
+            if (ValidateSerializedFields() == false)
             {
                 return;
             }
-            temporalList.Clear();
-            temporalList.Add(eventdata.raycastResult.worldPosition);
+
+            uiPointer.UIPointerElementEnter -= HoverEnter;
+            uiPointer.UIPointerElementExit -= OnHoverExit;
+            uiPointer.UIPointerElementClick -= OnSelectEnter;
+        }
+
+        private bool ValidateSerializedFields()
+        {
+            return uiPointer != null && pointerFacade != null;
+        }
+
+        private void HoverEnter(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventData)
+        {
+            if (ValidatePointerData(interactable) == false)
+            {
+                return;
+            }
+
+            CacheRaycastResultWorldPosition(eventData.raycastResult.worldPosition);
             FillInEventData();
-            pointerCastEventData.IsValid = true;
-            var data = eventData;
-            data.CurrentHoverDuration = 0.1f;
-            data.IsCurrentlyHovering = true;
-            data.IsCurrentlyActive = true;
-            data.CurrentPointsCastData = pointerCastEventData;
-            data.CurrentPointsCastData.Points = new HeapAllocationFreeReadOnlyList<Vector3>(temporalList,0,temporalList.Count);
-            pointerFacade.Configuration.EmitSelected(data);
+            ChangePointsCastEventDataValidState(true);
+
+            pointerFacade.Configuration.EmitHoverChanged(PrepareHoverEventDataObject(HoverEnterDuration, true));
+        }
+
+        private void OnHoverExit(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventData)
+        {
+            if (ValidatePointerData(interactable) == false)
+            {
+                return;
+            }
+
+            OnSelectExit(eventData);
+            CacheRaycastResultWorldPosition(eventData.raycastResult.worldPosition);
+            FillInEventData();
+            ChangePointsCastEventDataValidState(false);
+
+            pointerFacade.Configuration.EmitHoverChanged(PrepareHoverEventDataObject(HoverExitDuration, false));
+        }
+
+        private void OnSelectEnter(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventData)
+        {
+            if (ValidatePointerData(interactable) == false)
+            {
+                return;
+            }
+
+            CacheRaycastResultWorldPosition(eventData.raycastResult.worldPosition);
+            FillInEventData();
+            ChangePointsCastEventDataValidState(true);
+
+            pointerFacade.Configuration.EmitSelected(PrepareSelectEventDataObject(HoverEnterDuration, true, true));
+        }
+
+        private void OnSelectExit(VRTK4_UIPointer.VRTK4UIPointerEventArgs eventData)
+        {
+            CacheRaycastResultWorldPosition(eventData.raycastResult.worldPosition);
+            FillInEventData();
+            ChangePointsCastEventDataValidState(true);
+
+            pointerFacade.Configuration.EmitExited(PrepareSelectEventDataObject(HoverExitDuration, false, false));
+        }
+
+        private bool ValidatePointerData(VRTK4_UIPointer interactable)
+        {
+            return interactable != null && pointerFacade != null;
+        }
+
+        private void CacheRaycastResultWorldPosition(Vector3 worldPosition)
+        {
+            cachedRaycastResultWorldPositions.Clear();
+            cachedRaycastResultWorldPositions.Add(worldPosition);
         }
         
-        private void OnSelectExit(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventdata)
+        /// <summary>
+        /// Generates all of the data for pointerFacade
+        /// </summary>
+        private void FillInEventData()
         {
-            temporalList.Clear();
-            temporalList.Add(eventdata.raycastResult.worldPosition);
-            
-            FillInEventData();
-            pointerCastEventData.IsValid = true;
-            var data = eventData;
-            data.CurrentHoverDuration = 0.9f;
-            data.IsCurrentlyHovering = false;
-            data.IsCurrentlyActive = false;
-            data.CurrentPointsCastData = pointerCastEventData;
-            data.CurrentPointsCastData.Points = new HeapAllocationFreeReadOnlyList<Vector3>(temporalList,0,temporalList.Count);
-            pointerFacade.Configuration.EmitExited(data);
+            pointsCastEventData ??= new PointsCast.EventData();
+
+            objectPointerEventData ??= new ObjectPointer.EventData
+            {
+                Transform = transform
+            };
+
+            objectPointerEventData.Clear();
+            objectPointerEventData.UseLocalValues = false;
+            objectPointerEventData.ScaleOverride = Vector3.one;
+            objectPointerEventData.Direction = pointerFacade.transform.forward;
+            objectPointerEventData.PositionOverride = objectPointerEventData.Origin;
+            var objectPointerOriginTransform = pointerFacade.Configuration.ObjectPointer.Origin.transform;
+            objectPointerEventData.Origin = objectPointerOriginTransform.position;
+            objectPointerEventData.RotationOverride = objectPointerOriginTransform.rotation;
+        }
+
+        private void ChangePointsCastEventDataValidState(bool isValid)
+        {
+            pointsCastEventData.IsValid = isValid;
+        }
+
+        private ObjectPointer.EventData PrepareSelectEventDataObject(float currentHoverDuration, bool isCurrentlyHovering, bool isCurrentlyActive)
+        {
+            var data = PrepareHoverEventDataObject(currentHoverDuration, isCurrentlyHovering);
+            data.IsCurrentlyActive = isCurrentlyActive;
+
+            return data;
+        }
+
+        private ObjectPointer.EventData PrepareHoverEventDataObject(float currentHoverDuration, bool isCurrentlyHovering)
+        {
+            var data = objectPointerEventData;
+            data.CurrentHoverDuration = currentHoverDuration;
+            data.IsCurrentlyHovering = isCurrentlyHovering;
+            data.CurrentPointsCastData = pointsCastEventData;
+            data.CurrentPointsCastData.Points = new HeapAllocationFreeReadOnlyList<Vector3>(cachedRaycastResultWorldPositions, 0, cachedRaycastResultWorldPositions.Count);
+
+            return data;
         }
     }
 }
