@@ -29,7 +29,8 @@ Support for Unity UI. Both New and Old input systems
 - When using Unity Event Triggers -> pointers will always perform their separate OnEnter/OnExit -> so please see Unity Event Triggers usage script
 - All input fields must hide soft keyboard and hide mobile input. There is no default keyboard in this package. Please Use Custom one.
 - When using input fields -> VR + Input Field Caret is not working properly. Make sure to use custom caret. Example See here -> https://gist.github.com/studentutu/714d78ad6cebfe147bfa852fb7046a90
-    
+- for using custom UI 3d graphics cast layers - change VRTK4_3DGraphicRaycaster BlockingMask layer as well as layers on the target canvases. See here : ![Vrtk3DCasts]
+
 
 ## Getting Started
 
@@ -37,7 +38,8 @@ Please refer to the [installation] guide to install this package.
 
 See full scene and a separate prefab here :
 
-/Runtime/Example/TestScene -> here is a full scene with Custom Rig and UI Pointers attached
+/Runtime/Example/TestScene -> here is a full scene with Custom Rig and UI Pointers attached. 
+Note : on the Event system added VRTK4_EventSystem, VRTK4_VRInputModule, VRTK4_3DGraphicRaycaster
 
 /Runtime/SharedResources/Prefabs/[L_R]_ UI Pointer on Interactor.prefab  -> default UI Pointer, needs additional setup with Pointer, actions and PointerFacade
 
@@ -87,3 +89,5 @@ Code released under the [MIT License][License].
 [Code of Conduct]: https://github.com/ExtendRealityLtd/.github/blob/master/CODE_OF_CONDUCT.md
 
 [Full_Animation]: ./Documentation/HowToGuides/Installation/Animation.gif
+
+[Vrtk3DCasts]: ./Documentation/HowToGuides/Installation/Tillia3DCasts.PNG
