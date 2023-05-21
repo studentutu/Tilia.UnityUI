@@ -18,8 +18,14 @@ Support for Unity UI. Both New and Old input systems
 ![Full_Animation]
 
 
-## Important usage
-This package only covers use case with a **UI layer** for casting UI elements.
+## Use cases:
+
+This package only covers: 
+
+- use case with a **UI layer** for casting UI elements.
+- 3d casting on world object to enable support for default Unity Event Triggers
+
+## Setup: 
 
 1) Place **VRTK4_UICanvas** on each canvas
     - ON ALL UI ELEMENTS - buttons, sliders, inputfields, toggles, dropdown -> YOU MUST REMOVE DEFAULT UNITY NAVIGATION (**navigation = none**)!
@@ -34,7 +40,7 @@ This package only covers use case with a **UI layer** for casting UI elements.
 4) Just as with standart unity 3D raycasting (enabling cast on world objects) : Add **VRTK4_3DGraphicRaycaster** and setup interactive layers. See here : ![Vrtk3DCasts]
 
 
-Other important notes: 
+Other important notes:
 
 - When using animations on the UI canvas: add box collider on it in Editor mode, otherwise UI colliders are created at the Awake, with canvas delta size ( example animation from small to large size).
 
