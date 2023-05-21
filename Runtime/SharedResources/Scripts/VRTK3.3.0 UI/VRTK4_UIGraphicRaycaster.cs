@@ -21,7 +21,9 @@
         private static RaycastHit[] st_arrayOfRaycasts = new RaycastHit[10];
         private static RaycastHit2D[] st_arrayOfRaycasts2d = new RaycastHit2D[10];
         protected Canvas currentCanvas = null;
+        protected RectTransform _rectTransform = null;
         protected const float UI_CONTROL_OFFSET = 0.00001f;
+        private Vector3[] _corners = new Vector3[4];
 
         // Use a static to prevent list reallocation. We only need one of these globally (single main thread), and only to hold temporary data
         [NonSerialized] private static List<RaycastResult> s_RaycastResults = new List<RaycastResult>();
@@ -36,6 +38,7 @@
                 }
 
                 currentCanvas = gameObject.GetComponent<Canvas>();
+                _rectTransform = currentCanvas.GetComponent<RectTransform>();
                 return currentCanvas;
             }
         }
@@ -64,9 +67,30 @@
             }
 
             s_RaycastResults.Clear();
-            Raycast(CanvasToUse, eventCamera, eventData, ray, ref s_RaycastResults);
-            AppendToListAllCurrentRaycasts(ref resultAppendList, ref s_RaycastResults);
-            s_RaycastResults.Clear();
+
+            // Optimization: this canvas will only run only on a single VRTK_4_Input module.
+            if (CurrentPointer != null && CurrentPointer.PointerActive() && IsIntersectedByRay(ray))
+            {
+                Raycast(CanvasToUse, eventCamera, eventData, ray, ref s_RaycastResults);
+                AppendToListAllCurrentRaycasts(ref resultAppendList, ref s_RaycastResults);
+                s_RaycastResults.Clear();
+            }
+        }
+
+        private bool IsIntersectedByRay(Ray ray)
+        {
+            // Get the corners of the RectTransform in world space
+            _rectTransform.GetWorldCorners(_corners);
+
+            var bounds = new Bounds(_rectTransform.position, Vector3.zero);
+            for (int i = 0; i < _corners.Length; i++)
+            {
+                bounds.Encapsulate(_corners[i]);
+            }
+
+            bounds.Expand(0.2f);
+
+            return bounds.IntersectRay(ray) || bounds.Contains(ray.origin);
         }
 
         /// <summary>
@@ -85,19 +109,21 @@
         // Skip check for near/far plane!
         protected virtual float GetHitDistance(Ray ray, float hitDistance)
         {
-            if (CanvasToUse.renderMode != RenderMode.ScreenSpaceOverlay && blockingObjects != BlockingObjects.None)
+            if (CanvasToUse.renderMode != RenderMode.ScreenSpaceOverlay)
             {
                 float maxDistance = Vector3.Distance(ray.origin, CanvasToUse.transform.position) + 10f;
                 int allraycasts = -1;
+                
                 if (blockingObjects == BlockingObjects.ThreeD || blockingObjects == BlockingObjects.All)
                 {
                     allraycasts = Physics.RaycastNonAlloc(ray, st_arrayOfRaycasts, maxDistance, m_BlockingMask);
-                    if (allraycasts > 0)
+
+                    for (int i = 0; i < allraycasts; i++)
                     {
-                        RaycastHit hit = st_arrayOfRaycasts[0];
+                        RaycastHit hit = st_arrayOfRaycasts[i];
                         if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
                         {
-                            hitDistance = hit.distance;
+                            hitDistance = Mathf.Min(hit.distance, hitDistance);
                         }
                     }
 
@@ -109,12 +135,13 @@
                     allraycasts = Physics2D.RaycastNonAlloc(ray.origin, ray.direction, st_arrayOfRaycasts2d,
                         maxDistance,
                         m_BlockingMask);
-                    if (allraycasts > 0)
+                    
+                    for (int i = 0; i < allraycasts; i++)
                     {
-                        RaycastHit2D hit = st_arrayOfRaycasts2d[0];
+                        RaycastHit2D hit = st_arrayOfRaycasts2d[i];
                         if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
                         {
-                            hitDistance = hit.fraction * maxDistance;
+                            hitDistance = Mathf.Min(hit.fraction * maxDistance, hitDistance);
                         }
                     }
 
@@ -152,6 +179,9 @@
         protected virtual void Raycast(Canvas canvasIn, Camera eventCameraIn, PointerEventData eventData, Ray ray,
             ref List<RaycastResult> helperList)
         {
+            if (canvasIn == null || !canvasIn.enabled || !canvasIn.gameObject.activeInHierarchy)
+                return;
+
             // bool checkRaycastGraphic = false;
             float hitDistance = GetHitDistance(ray, VRTK4_UIPointer.GetPointerLength(eventData.pointerId));
             IList<Graphic> canvasGraphics = null;
@@ -190,9 +220,9 @@
                 Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
 #if UNITY_2020_3_OR_NEWER
                 if (!RectTransformUtility.RectangleContainsScreenPoint(
-                    graphic.rectTransform,
-                    pointerPosition,
-                    eventCameraIn, graphic.raycastPadding))
+                        graphic.rectTransform,
+                        pointerPosition,
+                        eventCameraIn, graphic.raycastPadding))
                 {
                     continue;
                 }

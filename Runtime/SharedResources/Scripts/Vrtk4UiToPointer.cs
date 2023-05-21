@@ -66,7 +66,9 @@
             eventData.Direction = pointerFacade.transform.forward;
             eventData.Origin = pointerFacade.Configuration.ObjectPointer.Origin.transform.position;
             eventData.PositionOverride = eventData.Origin;
-            eventData.RotationOverride = pointerFacade.Configuration.ObjectPointer.Origin.transform.rotation;
+            
+            if(pointerFacade != null)
+             eventData.RotationOverride = pointerFacade.Configuration.ObjectPointer.Origin.transform.rotation;
         }
 
         private void HoverEnter(VRTK4_UIPointer interactable, VRTK4_UIPointer.VRTK4UIPointerEventArgs eventdata)

@@ -110,7 +110,7 @@ namespace Tilia.VRTKUI
                     screenPosition = pointerPosition,
                     depth = 0,
                     sortingLayer = 0,
-                    sortingOrder = 7
+                    sortingOrder = VRTK4_SharedMethods.PointerSortingOrder
                 };
                 VRTK4_SharedMethods.AddListValue(helperList, result);
                 helperList.Sort(ComparisonInversedDistance);
@@ -119,12 +119,12 @@ namespace Tilia.VRTKUI
 
         private static int ComparisonInversedDistance(RaycastResult g1, RaycastResult g2)
         {
-            if (g2.sortingOrder == 7)
+            if (g2.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
             {
                 return g2.distance.CompareTo(g1.distance);
             }
 
-            if (g1.sortingOrder == 7)
+            if (g1.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
             {
                 return g2.distance.CompareTo(g1.distance);
             }

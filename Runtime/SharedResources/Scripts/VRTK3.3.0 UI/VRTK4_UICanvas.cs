@@ -23,8 +23,13 @@
         public bool clickOnPointerCollision = false;
 
         [Tooltip(
-            "Determines if a UI Pointer will be auto activated if a UI Pointer game object comes within the given distance of this canvas. If a value of `0` is given then no auto activation will occur.")]
+            "Determines if a UI Pointer will be auto activated if a UI Pointer game object comes within the given distance of this canvas. If a value of `0` is given then no auto activation will occur." +
+            " If used, prefer to add your predefined ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT, otherwise new default one will be created. ")]
         public float autoActivateWithinDistance = 0f;
+
+        [Tooltip("If you need drag, pick and drop functionality on the canvas, enabled this. Note: scroll, drag and scroll works as is." +
+                 " If used, prefer to add your predefined CANVAS_DRAGGABLE_PANEL, otherwise new default one will be created. ")]
+        public bool supportDragAndDropUI = false;
 
         protected BoxCollider canvasBoxCollider;
         protected Rigidbody canvasRigidBody;
@@ -135,7 +140,7 @@
                 canvasBoxCollider.center = new Vector3(canvasSize.x / 2 - canvasSize.x * pivot.x,
                     canvasSize.y / 2 - canvasSize.y * pivot.y, zScale / 2f);
                 canvasBoxCollider.isTrigger = true;
-                canvasBoxCollider.gameObject.layer = UnityEngine.LayerMask.NameToLayer("UI");
+                canvasBoxCollider.gameObject.layer = VRTK4_SharedMethods.UI_Layer;
             }
 
             if (canvas.gameObject.GetComponent<Rigidbody>() == null)
@@ -144,7 +149,8 @@
                 canvasRigidBody.isKinematic = true;
             }
 
-            draggablePanelCreation = StartCoroutine(CreateDraggablePanel(canvas, canvasSize));
+            if(supportDragAndDropUI)
+                draggablePanelCreation = StartCoroutine(CreateDraggablePanel(canvas, canvasSize));
             CreateActivator(canvas, canvasSize);
         }
 

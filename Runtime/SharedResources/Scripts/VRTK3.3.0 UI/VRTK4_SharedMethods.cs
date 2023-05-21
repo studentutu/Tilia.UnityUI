@@ -12,6 +12,9 @@ namespace Tilia.VRTKUI
     /// </summary>
     public static class VRTK4_SharedMethods
     {
+        public const int PointerSortingOrder = 7;
+        public static int UI_Layer = LayerMask.NameToLayer("UI");
+        
         /// <summary>
         /// The GetDictionaryValue method attempts to retrieve a value from a given dictionary for the given key. It removes the need for a double dictionary lookup to ensure the key is valid and has the option of also setting the missing key value to ensure the dictionary entry is valid.
         /// </summary>

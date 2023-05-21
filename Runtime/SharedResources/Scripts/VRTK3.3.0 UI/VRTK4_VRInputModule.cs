@@ -91,12 +91,17 @@
             pointer.pointerEventData.pointerCurrentRaycast = raycastResult;
             VRTK4_UIGraphicRaycaster.CurrentPointer = pointer;
             VRTK4_3DGraphicRaycaster.CurrentPointer = pointer;
+            
             raycasts.Clear();
             eventSystem.RaycastAll(pointer.pointerEventData, raycasts);
             raycasts.Sort(ComparisonInversedDistance);
+            
             if (raycasts.Count > 0)
             {
                 var toUse = raycasts[0];
+                raycasts.Clear();
+                raycasts.Add(toUse);
+                
                 var lastKnownPosition = pointer.pointerEventData.position;
                 pointer.pointerEventData.position = toUse.screenPosition;
                 pointer.pointerEventData.delta = pointer.pointerEventData.position - lastKnownPosition;
@@ -110,12 +115,12 @@
 
         private static int ComparisonInversedDistance(RaycastResult g1, RaycastResult g2)
         {
-            if (g2.sortingOrder == 7)
+            if (g2.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
             {
                 return g2.distance.CompareTo(g1.distance);
             }
 
-            if (g1.sortingOrder == 7)
+            if (g1.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
             {
                 return g2.distance.CompareTo(g1.distance);
             }
@@ -173,7 +178,7 @@
         protected virtual bool ValidElement(GameObject obj)
         {
             bool isValid = false;
-            if (obj.layer != LayerMask.NameToLayer("UI"))
+            if (obj.layer != VRTK4_SharedMethods.UI_Layer)
             {
                 var anyHandler = obj.GetComponentInParent<IEventSystemHandler>();
                 if (anyHandler != null)
@@ -291,7 +296,6 @@
                     }
 
                     GameObject target = ExecuteEvents.GetEventHandler<IPointerEnterHandler>(result.gameObject);
-                    // listPointerEnter.Add(pointer.pointerEventData.pointerEnter);
 
                     target = (target == null ? result.gameObject : target);
 
@@ -535,7 +539,7 @@
                     if (target != null)
                     {
                         pointer.pointerEventData.pointerDrag = target;
-                        break;
+                        return;
                     }
                 }
             }

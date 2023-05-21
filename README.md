@@ -19,17 +19,30 @@ Support for Unity UI. Both New and Old input systems
 
 
 ## Important usage
+This package only covers use case with a **UI layer** for casting UI elements.
 
-- Place VRTK4_UICanvas on each canvas
-- ON ALL UI ELEMENTS - buttons, sliders, inputfields, toggles, dropdown -> YOU MUST REMOVE DEFAULT UNITY NAVIGATION (navigation = none)!
-- You may leave Blocking mask as None (this way you will save on performance - no 3D raycasts will be performed)
-- To Ignore Player Objects - Use Component VRTK4_Player Object (collision detection)
-- Also, if you are using Pseudobody - add pointers to the IgnoredGameObjectList
-- when using animations on the UI canvas -> add box collider on it in Editor mode -> Colliders are created at the awake - so it can be different when the target canvas is animated!
-- When using Unity Event Triggers -> pointers will always perform their separate OnEnter/OnExit -> so please see Unity Event Triggers usage script
-- All input fields must hide soft keyboard and hide mobile input. There is no default keyboard in this package. Please Use Custom one.
-- When using input fields -> VR + Input Field Caret is not working properly. Make sure to use custom caret. Example See here -> https://gist.github.com/studentutu/714d78ad6cebfe147bfa852fb7046a90
-- for using custom UI 3d graphics cast layers - change VRTK4_3DGraphicRaycaster BlockingMask layer as well as layers on the target canvases. See here : ![Vrtk3DCasts]
+1) Place **VRTK4_UICanvas** on each canvas
+    - ON ALL UI ELEMENTS - buttons, sliders, inputfields, toggles, dropdown -> YOU MUST REMOVE DEFAULT UNITY NAVIGATION (**navigation = none**)!
+    - You may leave Blocking mask as None (this way you will save on performance - no 3D raycasts will be performed)
+
+2) If you need drag and drop functionality on the UI: enable **supportDragAndDropUI** on the **VRTK4_UICanvas** (use custom gameobject with name **CANVAS_DRAGGABLE_PANEL**, or default one will generated). Note : default CANVAS_DRAGGABLE_PANEL is placed first,it will block all previous canvases or canvases that are behind it.  
+
+2) To ignore player objects : use component **VRTK4_PlayerObject**
+
+3) If you are using **Pseudobody** - add pointers to the **IgnoredGameObjectList**
+
+4) Just as with standart unity 3D raycasting (enabling cast on world objects) : Add **VRTK4_3DGraphicRaycaster** and setup interactive layers. See here : ![Vrtk3DCasts]
+
+
+Other important notes: 
+
+- When using animations on the UI canvas: add box collider on it in Editor mode, otherwise UI colliders are created at the Awake, with canvas delta size ( example animation from small to large size).
+
+- When using Unity Event Triggers: pointers will always perform their separate OnEnter/OnExit -> so please see **TiliaUnityEventTriggerSubscriber** correct usage script
+
+- All input fields must hide soft keyboard and hide mobile input. There is no default keyboard in this package. Please use custom one.
+
+- When using input fields:  VR + Input field caret is not working properly. Make sure to use custom caret script. Example see here -> https://gist.github.com/studentutu/714d78ad6cebfe147bfa852fb7046a90
 
 
 ## Getting Started
