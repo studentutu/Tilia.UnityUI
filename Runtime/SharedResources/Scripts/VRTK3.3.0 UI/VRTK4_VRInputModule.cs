@@ -10,12 +10,12 @@
     public class VRTK4_VRInputModule : PointerInputModule
     {
         public List<VRTK4_UIPointer> Pointers = new List<VRTK4_UIPointer>();
-        private List<RaycastResult> raycasts = new List<RaycastResult>();
+        private List<RaycastResult> _raycasts = new List<RaycastResult>();
 
         private Dictionary<VRTK4_UIPointer, List<RaycastResult>> PointersWithRaycasts =
             new Dictionary<VRTK4_UIPointer, List<RaycastResult>>();
 
-        private List<List<RaycastResult>> poolOfLists = new List<List<RaycastResult>>(2);
+        private List<List<RaycastResult>> _poolOfLists = new List<List<RaycastResult>>(2);
 
 
         //Needed to allow other regular (non-VR) InputModules in combination with VRTK_EventSystem
@@ -26,31 +26,31 @@
 
         public override void Process()
         {
-            if (poolOfLists.Count == 0)
+            if (_poolOfLists.Count == 0)
             {
-                poolOfLists.Add(new List<RaycastResult>(30));
-                poolOfLists.Add(new List<RaycastResult>(30));
+                _poolOfLists.Add(new List<RaycastResult>(30));
+                _poolOfLists.Add(new List<RaycastResult>(30));
             }
 
-            while (poolOfLists.Count < Pointers.Count)
+            while (_poolOfLists.Count < Pointers.Count)
             {
-                poolOfLists.Add(new List<RaycastResult>(30));
+                _poolOfLists.Add(new List<RaycastResult>(30));
             }
 
-            for (int i = 0; i < poolOfLists.Count; i++)
+            for (int i = 0; i < _poolOfLists.Count; i++)
             {
-                poolOfLists[i].Clear();
+                _poolOfLists[i].Clear();
             }
 
             PointersWithRaycasts.Clear();
             for (int i = 0; i < Pointers.Count; i++)
             {
-                PointersWithRaycasts.Add(Pointers[i], poolOfLists[i]);
+                PointersWithRaycasts.Add(Pointers[i], _poolOfLists[i]);
             }
 
             for (int i = 0; i < Pointers.Count; i++)
             {
-                VRTK4_UIPointer pointer = Pointers[i];
+                var pointer = Pointers[i];
                 if (pointer != null && pointer.gameObject.activeInHierarchy && pointer.enabled)
                 {
                     if (pointer.PointerActive() || pointer.autoActivatingCanvas != null)
@@ -65,7 +65,7 @@
             // Process events
             for (int i = 0; i < Pointers.Count; i++)
             {
-                VRTK4_UIPointer pointer = Pointers[i];
+                var pointer = Pointers[i];
                 if (pointer != null && pointer.gameObject.activeInHierarchy && pointer.enabled)
                 {
                     Click(pointer, PointersWithRaycasts[pointer]);
@@ -74,9 +74,9 @@
                 }
             }
 
-            for (int i = 0; i < poolOfLists.Count; i++)
+            for (int i = 0; i < _poolOfLists.Count; i++)
             {
-                poolOfLists[i].Clear();
+                _poolOfLists[i].Clear();
             }
 
             PointersWithRaycasts.Clear();
@@ -84,24 +84,25 @@
 
         protected virtual List<RaycastResult> CheckRaycasts(VRTK4_UIPointer pointer)
         {
-            RaycastResult raycastResult = new RaycastResult();
+            var raycastResult = new RaycastResult();
             raycastResult.worldPosition = pointer.GetOriginPosition();
             raycastResult.worldNormal = pointer.GetOriginForward();
 
             pointer.pointerEventData.pointerCurrentRaycast = raycastResult;
             VRTK4_UIGraphicRaycaster.CurrentPointer = pointer;
             VRTK4_3DGraphicRaycaster.CurrentPointer = pointer;
-            
-            raycasts.Clear();
-            eventSystem.RaycastAll(pointer.pointerEventData, raycasts);
-            raycasts.Sort(ComparisonInversedDistance);
-            
-            if (raycasts.Count > 0)
+
+            _raycasts.Clear();
+            eventSystem.RaycastAll(pointer.pointerEventData, _raycasts);
+            if (_raycasts.Count > 1)
+                _raycasts.Sort(RaycastComparer);
+
+            if (_raycasts.Count > 0)
             {
-                var toUse = raycasts[0];
-                raycasts.Clear();
-                raycasts.Add(toUse);
-                
+                var toUse = _raycasts[0];
+                _raycasts.Clear();
+                _raycasts.Add(toUse);
+
                 var lastKnownPosition = pointer.pointerEventData.position;
                 pointer.pointerEventData.position = toUse.screenPosition;
                 pointer.pointerEventData.delta = pointer.pointerEventData.position - lastKnownPosition;
@@ -110,22 +111,45 @@
 
             VRTK4_UIGraphicRaycaster.CurrentPointer = null;
             VRTK4_3DGraphicRaycaster.CurrentPointer = null;
-            return raycasts;
+            return _raycasts;
         }
 
-        private static int ComparisonInversedDistance(RaycastResult g1, RaycastResult g2)
+        public static int RaycastComparer(RaycastResult lhs, RaycastResult rhs)
         {
-            if (g2.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
+            if (lhs.module != rhs.module)
+                return lhs.distance.CompareTo(rhs.distance);
+
+            // Renderer sorting
+            if (lhs.sortingLayer != rhs.sortingLayer)
             {
-                return g2.distance.CompareTo(g1.distance);
+                // Uses the layer value to properly compare the relative order of the layers.
+                var rid = SortingLayer.GetLayerValueFromID(rhs.sortingLayer);
+                var lid = SortingLayer.GetLayerValueFromID(lhs.sortingLayer);
+                return rid.CompareTo(lid);
             }
 
-            if (g1.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
-            {
-                return g2.distance.CompareTo(g1.distance);
-            }
+            if (lhs.sortingOrder != rhs.sortingOrder)
+                return rhs.sortingOrder.CompareTo(lhs.sortingOrder);
 
-            return 0;
+            // comparing depth only makes sense if the two raycast results have the same root canvas (case 912396)
+            if (lhs.depth != rhs.depth && lhs.module.rootRaycaster == rhs.module.rootRaycaster)
+                return rhs.depth.CompareTo(lhs.depth);
+
+            if (lhs.distance != rhs.distance)
+                return lhs.distance.CompareTo(rhs.distance);
+
+#if PACKAGE_PHYSICS2D
+			// Sorting group
+            if (lhs.sortingGroupID != SortingGroup.invalidSortingGroupID && rhs.sortingGroupID != SortingGroup.invalidSortingGroupID)
+            {
+                if (lhs.sortingGroupID != rhs.sortingGroupID)
+                    return lhs.sortingGroupID.CompareTo(rhs.sortingGroupID);
+                if (lhs.sortingGroupOrder != rhs.sortingGroupOrder)
+                    return rhs.sortingGroupOrder.CompareTo(lhs.sortingGroupOrder);
+            }
+#endif
+
+            return lhs.index.CompareTo(rhs.index);
         }
 
         protected virtual bool CheckTransformTree(Transform target, Transform source)
@@ -158,7 +182,7 @@
         {
             for (int i = 0; i < pointer.pointerEventData.hovered.Count; i++)
             {
-                GameObject hoveredObject = pointer.pointerEventData.hovered[i];
+                var hoveredObject = pointer.pointerEventData.hovered[i];
                 if (pointer.pointerEventData.pointerEnter != null &&
                     hoveredObject != null &&
                     CheckTransformTree(hoveredObject.transform, pointer.pointerEventData.pointerEnter.transform))
@@ -171,7 +195,7 @@
         }
 
         /// <summary>
-        /// Sanity Check for Graphic Raycaster
+        ///     Sanity Check for Graphic Raycaster
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -252,7 +276,7 @@
             _alreadyEntered.Clear();
             foreach (var item in PointersWithRaycasts)
             {
-                VRTK4_UIPointer pointer = item.Key;
+                var pointer = item.Key;
 
                 if (pointer.pointerEventData.pointerEnter != null)
                 {
@@ -286,7 +310,7 @@
 
             foreach (var item in PointersWithRaycasts)
             {
-                VRTK4_UIPointer pointer = item.Key;
+                var pointer = item.Key;
                 for (int i = 0; i < 1 && i < item.Value.Count; i++)
                 {
                     RaycastResult result = item.Value[i];

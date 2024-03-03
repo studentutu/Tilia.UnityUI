@@ -27,8 +27,9 @@
             " If used, prefer to add your predefined ACTIVATOR_FRONT_TRIGGER_GAMEOBJECT, otherwise new default one will be created. ")]
         public float autoActivateWithinDistance = 0f;
 
-        [Tooltip("If you need drag, pick and drop functionality on the canvas, enabled this. Note: scroll, drag and scroll works as is." +
-                 " If used, prefer to add your predefined CANVAS_DRAGGABLE_PANEL, otherwise new default one will be created. ")]
+        [Tooltip(
+            "If you need drag, pick and drop functionality on the canvas, enabled this. Note: scroll, drag and scroll works as is." +
+            " If used, prefer to add your predefined CANVAS_DRAGGABLE_PANEL, otherwise new default one will be created. ")]
         public bool supportDragAndDropUI = false;
 
         protected BoxCollider canvasBoxCollider;
@@ -149,7 +150,7 @@
                 canvasRigidBody.isKinematic = true;
             }
 
-            if(supportDragAndDropUI)
+            if (supportDragAndDropUI)
                 draggablePanelCreation = StartCoroutine(CreateDraggablePanel(canvas, canvasSize));
             CreateActivator(canvas, canvasSize);
         }

@@ -6,14 +6,18 @@ using UnityEngine.EventSystems;
 namespace Tilia.VRTKUI
 {
     /// <summary>
-    /// Add this to VRTK 4 Event System gameobject to Receive Unity event trigger events on your 3D objects
+    ///     Add this to VRTK 4EventSystem gameobject to Receive Unity event trigger events on your 3D objects.
+    ///     It is an optional component it will require additional raycasts towards 3D objects.
     /// </summary>
     public class VRTK4_3DGraphicRaycaster : BaseRaycaster
     {
         public static VRTK4_UIPointer CurrentPointer;
         private static RaycastHit[] st_arrayOfRaycasts = new RaycastHit[10];
 
-        [SerializeField] private LayerMask m_BlockingMask;
+        [Tooltip(
+            "Layers to be included for raycast towards 3D object. Note: they will interfere with UI raycasts ( only first raycasted UI or 3DObject will be used).")]
+        [SerializeField]
+        private LayerMask m_BlockingMask;
 
         // Use a static to prevent list reallocation. We only need one of these globally (single main thread), and only to hold temporary data
         [NonSerialized] private static List<RaycastResult> s_RaycastResults = new List<RaycastResult>();
@@ -86,50 +90,37 @@ namespace Tilia.VRTKUI
             float hitDistance = VRTK4_UIPointer.GetPointerLength(eventData.pointerId);
             bool isSuccesfullRaycasted = TryGetHitDistance(ray, ref hitDistance, out hitResult);
             ClearArrNonAlloc3D();
-            if (isSuccesfullRaycasted)
+            if (!isSuccesfullRaycasted)
+                return;
+
+            Transform graphicTransform = hitResult.transform;
+            Vector3 graphicForward = graphicTransform.forward;
+            float distance = Vector3.Dot(graphicForward, graphicTransform.position - ray.origin) /
+                             Vector3.Dot(graphicForward, ray.direction);
+
+            if (distance < 0)
             {
-                Transform graphicTransform = hitResult.transform;
-                Vector3 graphicForward = graphicTransform.forward;
-                float distance = Vector3.Dot(graphicForward, graphicTransform.position - ray.origin) /
-                                 Vector3.Dot(graphicForward, ray.direction);
-
-                if (distance < 0)
-                {
-                    return;
-                }
-
-                Vector3 position = ray.GetPoint(distance);
-                Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
-                var result = new RaycastResult
-                {
-                    gameObject = hitResult.collider.gameObject,
-                    module = this,
-                    distance = hitResult.distance,
-                    worldPosition = hitResult.point,
-                    worldNormal = hitResult.normal,
-                    screenPosition = pointerPosition,
-                    depth = 0,
-                    sortingLayer = 0,
-                    sortingOrder = VRTK4_SharedMethods.PointerSortingOrder
-                };
-                VRTK4_SharedMethods.AddListValue(helperList, result);
-                helperList.Sort(ComparisonInversedDistance);
-            }
-        }
-
-        private static int ComparisonInversedDistance(RaycastResult g1, RaycastResult g2)
-        {
-            if (g2.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
-            {
-                return g2.distance.CompareTo(g1.distance);
+                return;
             }
 
-            if (g1.sortingOrder == VRTK4_SharedMethods.PointerSortingOrder)
+            Vector3 position = ray.GetPoint(distance);
+            Vector2 pointerPosition = eventCameraIn.WorldToScreenPoint(position);
+            var result = new RaycastResult
             {
-                return g2.distance.CompareTo(g1.distance);
-            }
+                gameObject = hitResult.collider.gameObject,
+                module = this,
+                distance = hitResult.distance,
+                worldPosition = hitResult.point,
+                worldNormal = hitResult.normal,
+                screenPosition = pointerPosition,
+                depth = 0,
+                sortingLayer = 0,
+                sortingOrder = VRTK4_SharedMethods.PointerSortingOrder
+            };
 
-            return 0;
+            VRTK4_SharedMethods.AddListValue(helperList, result);
+            if (helperList.Count > 1)
+                helperList.Sort(VRTK4_VRInputModule.RaycastComparer);
         }
 
         // Skip check for near/far plane!
@@ -143,7 +134,7 @@ namespace Tilia.VRTKUI
             {
                 if (allraycasts > 1)
                 {
-                    System.Array.Sort(st_arrayOfRaycasts, 0, allraycasts, VRTK3DRaycastHitComparer.instance);
+                    System.Array.Sort(st_arrayOfRaycasts, 0, allraycasts, VRTK3DRaycastHitComparer.Instance);
                 }
 
                 RaycastHit hit;
@@ -152,6 +143,7 @@ namespace Tilia.VRTKUI
                     hit = st_arrayOfRaycasts[i];
                     if (hit.collider != null && !VRTK4_PlayerObject.IsPlayerObject(hit.collider.gameObject))
                     {
+                        // Should return hit along with the hit object, for further processing ( in order for 3Dobject to receive UI events)
                         hitDistance = hit.distance;
                         hitResult = hit;
                         return true;
@@ -173,7 +165,7 @@ namespace Tilia.VRTKUI
 
         private class VRTK3DRaycastHitComparer : IComparer<RaycastHit>
         {
-            public static VRTK3DRaycastHitComparer instance = new VRTK3DRaycastHitComparer();
+            public static VRTK3DRaycastHitComparer Instance = new VRTK3DRaycastHitComparer();
 
             public int Compare(RaycastHit x, RaycastHit y)
             {

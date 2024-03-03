@@ -113,7 +113,7 @@
             {
                 float maxDistance = Vector3.Distance(ray.origin, CanvasToUse.transform.position) + 10f;
                 int allraycasts = -1;
-                
+
                 if (blockingObjects == BlockingObjects.ThreeD || blockingObjects == BlockingObjects.All)
                 {
                     allraycasts = Physics.RaycastNonAlloc(ray, st_arrayOfRaycasts, maxDistance, m_BlockingMask);
@@ -135,7 +135,7 @@
                     allraycasts = Physics2D.RaycastNonAlloc(ray.origin, ray.direction, st_arrayOfRaycasts2d,
                         maxDistance,
                         m_BlockingMask);
-                    
+
                     for (int i = 0; i < allraycasts; i++)
                     {
                         RaycastHit2D hit = st_arrayOfRaycasts2d[i];
@@ -255,7 +255,8 @@
                 }
             }
 
-            helperList.Sort(ComparisonInversed);
+            if (helperList.Count > 1)
+                helperList.Sort(ComparisonInversed);
         }
 
         private static int ComparisonInversed(RaycastResult g1, RaycastResult g2)
